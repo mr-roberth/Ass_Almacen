@@ -16,7 +16,7 @@ const escapeHTML=x=>String(x??"").replace(/[&<>"']/g,v=>({"&":"&amp;","<":"&lt;"
 function getSaved(k,otherwise){try{return JSON.parse(localStorage.getItem(k))??otherwise}catch(e){return otherwise}}
 let store=getSaved(KEY,[]).filter(x=>x&&x.id&&x.scores),current=getSaved(DRAFTKEY,null),step=0,radarChart=null,barsChart=null;
 if(!current||!current.scores)current=store[0]?clone(store[0]):blank();
-function blank(){return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"",date:new Date().toLocaleDateString("en-CA"),area:"Almacén / Planeación",owner:"",forecast:"",representative:"",scores:{},created:new Date().toISOString()}}
+function blank(){return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"",date:(()=>{const n=new Date();return new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10)})(),area:"Almacén / Planeación",owner:"",forecast:"",representative:"",scores:{},created:new Date().toISOString()}}
 function rating(x){return [0,1,2].includes(Number(x))&&x!==undefined&&x!==null?Number(x):null}
 function pct(n){return n==null?"—":Math.round(n)+"%"}
 function level(n){return n==null?"Sin evaluar":n<=25?"Inicial":n<=50?"Básico":n<=75?"Estandarizado":n<=90?"Controlado":"Sostenible"}
