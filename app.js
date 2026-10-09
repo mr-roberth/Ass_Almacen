@@ -16,7 +16,7 @@ const escapeHTML=x=>String(x??"").replace(/[&<>"']/g,v=>({"&":"&amp;","<":"&lt;"
 function getSaved(k,otherwise){try{return JSON.parse(localStorage.getItem(k))??otherwise}catch(e){return otherwise}}
 let store=getSaved(KEY,[]).filter(x=>x&&x.id&&x.scores),current=getSaved(DRAFTKEY,null),step=0,radarChart=null,barsChart=null;
 if(!current||!current.scores)current=store[0]?clone(store[0]):blank();
-function blank(){return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"",date:(()=>{const n=new Date();return new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10)})(),area:"Almacén / Planeación",owner:"",forecast:"",representative:"",scores:{},created:new Date().toISOString()}}
+function blank(){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area:"Almacén",owner:"",forecast:"",representative:"",scores:{},created:n.toISOString()}}
 function rating(x){return [0,1,2].includes(Number(x))&&x!==undefined&&x!==null?Number(x):null}
 function pct(n){return n==null?"—":Math.round(n)+"%"}
 function level(n){return n==null?"Sin evaluar":n<=25?"Inicial":n<=50?"Básico":n<=75?"Estandarizado":n<=90?"Controlado":"Sostenible"}
@@ -27,8 +27,8 @@ function classScore(v){return v===2?"yes":v===1?"partial":v===0?"no":"na"}
 function dateLabel(s){try{return new Date(s+"T12:00:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"})}catch(e){return s||""}}
 function localDraft(){try{localStorage.setItem(DRAFTKEY,JSON.stringify(current))}catch(e){status("Espacio local insuficiente. Descarga un respaldo JSON.",true)}}
 function status(msg,bad=false){el("status").textContent=msg;el("status").classList.toggle("error",bad)}
-function currentFields(){["period","date","area","owner","forecast","representative"].forEach(k=>{const field=el("field-"+k);if(field)current[k]=field.value});localDraft()}
-function reflectFields(){["period","date","area","owner","forecast","representative"].forEach(k=>{el("field-"+k).value=current[k]??""})}
+function currentFields(){localDraft()}
+function reflectFields(){}
 function showPage(which){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+which));if(which==="evaluaciones")renderHistory();if(which==="dashboard")renderDashboard()}
 function renderStepNav(){
  const html=STEPS.map((s,i)=>{const filtered=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);const count=filtered.filter(x=>rating(current.scores[x.id]?.value)!==null).length;
@@ -85,9 +85,9 @@ function startNew(){if(!confirm("¿Iniciar una nueva evaluación? Guarda la actu
 function openEval(id){const obj=store.find(x=>x.id===id);if(!obj)return;current=clone(obj);step=0;localDraft();reflectFields();renderStep();status("Evaluación cargada para revisar o actualizar.");showPage("nueva")}
 function removeEval(id){if(!confirm("¿Eliminar esta evaluación del almacenamiento de este navegador? Los registros que ya llegaron a Sheets NO se eliminan."))return;store=store.filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(store));renderHistory();status("Evaluación eliminada solo de este navegador.")}
 function renderHistory(){
- const q=el("search-evals").value.toLowerCase().trim(),arr=store.filter(x=>!q||[x.period,x.area,x.owner,x.date].join(" ").toLowerCase().includes(q));
+ const q=el("search-evals").value.toLowerCase().trim(),arr=store.filter(x=>!q||[x.period,x.date].join(" ").toLowerCase().includes(q));
  el("hist-count").textContent=store.length+" evaluaciones guardadas en este navegador";
- el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||"Sin periodo")+'</strong><br><span class="subtle">'+escapeHTML(x.area||"")+'</span></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+escapeHTML(x.owner||"—")+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
+ el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||("Evaluación "+dateLabel(x.date)))+'</strong></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+totalAnswered(x)+' / '+ITEMS.length+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
  syncDashboardSelector();
 }
 function syncDashboardSelector(){
@@ -113,9 +113,9 @@ function renderDashboard(){
  el("kpi-global").textContent=pct(d.overall);
  el("kpi-level").textContent=level(d.overall);
  el("kpi-answered").textContent=d.answered+"/"+ITEMS.length;
- el("kpi-compliance").textContent=ev.forecast!==""&&ev.forecast!=null?ev.forecast+"%":"—";
+ el("kpi-elements").textContent=STEPS.filter(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e).every(x=>rating(ev.scores?.[x.id]?.value)!==null)).length+" / "+STEPS.length;
  el("kpi-met").textContent=ITEMS.filter(x=>rating(ev.scores?.[x.id]?.value)===2).length;
- el("dashboard-subtitle").textContent=(ev.period||"Evaluación sin periodo")+" · "+(ev.area||"")+" · "+(ev.owner||"Sin evaluador")+" · "+(ev.date||"");
+ el("dashboard-subtitle").textContent=(ev.period||"Evaluación") + " · " + (ev.date||"");
  makeCharts(ev);
  renderDetails(ev);
 }
@@ -128,8 +128,8 @@ function downloadContent(filename,type,data){
 }
 function exportCSV(){
  const all=store.some(x=>x.id===current.id)?store:store.concat(current);
- const rows=[["ID","Periodo","Fecha","Área","Evaluador","Representante","Forecast %","Pilar","Elemento","Criterio","Resultado","Puntaje","Evidencia","Observaciones","Acción"]];
- all.forEach(ev=>ITEMS.forEach(x=>{const o=ev.scores?.[x.id]||{},v=rating(o.value);rows.push([ev.id,ev.period,ev.date,ev.area,ev.owner,ev.representative||"",ev.forecast,x.pillar,x.element,x.criterion,labelScore(v),v??"",o.evidence||"",o.notes||"",o.action||""])}));
+ const rows=[["ID","Evaluación","Fecha","Pilar","Elemento","Criterio","Resultado","Puntaje","Evidencia","Observaciones","Acción"]];
+ all.forEach(ev=>ITEMS.forEach(x=>{const o=ev.scores?.[x.id]||{},v=rating(o.value);rows.push([ev.id,ev.period,ev.date,x.pillar,x.element,x.criterion,labelScore(v),v??"",o.evidence||"",o.notes||"",o.action||""])}));
  const content=rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
  downloadContent("oleolab_assessment_datos.csv","text/csv;charset=utf-8","\uFEFF"+content);
 }
@@ -154,13 +154,13 @@ async function generatePDF(){
  if(logo){pdf.setFillColor(255,255,255);pdf.roundedRect(14,6,47,22,2,2,"F");pdf.addImage(logo,"PNG",17,10,41,14)}
  pdf.setTextColor(255,255,255);pdf.setFontSize(17);pdf.setFont("helvetica","bold");
  pdf.text("ASSESSMENT DE MADUREZ",logo?68:14,17);
- pdf.setFontSize(9);pdf.setFont("helvetica","normal");pdf.text("Práctica de cumplimiento del Forecast · Oleolab",logo?68:14,25);
+ pdf.setFontSize(9);pdf.setFont("helvetica","normal");pdf.text("Evaluación de madurez de Almacén · Oleolab",logo?68:14,25);
  pdf.setTextColor(30,58,42);pdf.setFontSize(12);pdf.setFont("helvetica","bold");pdf.text(String(ev.period||"Evaluación").slice(0,80),margin,48);
  pdf.setFontSize(9);pdf.setFont("helvetica","normal");
- pdf.text("Área: "+String(ev.area||"—").slice(0,95),margin,54);
- pdf.text("Evaluador: "+String(ev.owner||"—").slice(0,85)+"    Fecha: "+String(ev.date||"—"),margin,60);
- pdf.text("Representante: "+String(ev.representative||"—").slice(0,80),margin,66);
- const labels=[["MADUREZ GLOBAL",pct(d.overall)],["NIVEL",level(d.overall)],["CRITERIOS EVALUADOS",d.answered+"/"+ITEMS.length],["CUMPLIMIENTO FORECAST",ev.forecast!==""&&ev.forecast!=null?String(ev.forecast)+"%":"—"]];
+ pdf.text("Fecha de evaluación: "+String(dateLabel(ev.date)||"—"),margin,54);
+ pdf.text("Cuestionario: "+DATA.length+" pilares · "+STEPS.length+" elementos · "+ITEMS.length+" criterios",margin,60);
+ 
+ const labels=[["MADUREZ GLOBAL",pct(d.overall)],["NIVEL",level(d.overall)],["CRITERIOS EVALUADOS",d.answered+"/"+ITEMS.length],["ELEMENTOS COMPLETOS",STEPS.filter(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e).every(x=>rating(ev.scores?.[x.id]?.value)!==null)).length+"/"+STEPS.length]];
  const cardW=43.5;
  labels.forEach(([l,v],i)=>{const x=margin+i*46;pdf.setFillColor(239,246,241);pdf.roundedRect(x,75,cardW,24,2,2,"F");pdf.setTextColor(77,102,86);pdf.setFontSize(7);pdf.text(l,x+3,82);pdf.setTextColor(20,84,57);pdf.setFontSize(13);pdf.setFont("helvetica","bold");pdf.text(String(v),x+3,92);pdf.setFont("helvetica","normal")});
  pdf.setTextColor(25,76,53);pdf.setFont("helvetica","bold");pdf.setFontSize(10);
@@ -169,7 +169,7 @@ async function generatePDF(){
  if(barsChart){pdf.addImage(imageData(el("barsChart")),"PNG",110,117,89,113)}
  pdf.setTextColor(89,112,95);pdf.setFontSize(9);pdf.setFont("helvetica","normal");
  pdf.text("Escala: No cumple = 0 · Parcial = 1 · Cumple = 2. Sin evaluar se excluye del promedio.",margin,244);
- pdf.text("El porcentaje real del Forecast se captura de forma independiente del índice de madurez.",margin,250);
+ pdf.text("Resultados basados en los criterios respondidos para esta evaluación.",margin,250);
  pdf.text("Informe generado: "+new Date().toLocaleString("es-MX"),margin,258);
  const hasAutoTable=typeof pdf.autoTable==="function";
  for(let p=0;p<DATA.length;p++){
@@ -198,7 +198,7 @@ async function fetchCloud(){
  store=[...map.values()];localStorage.setItem(KEY,JSON.stringify(store));renderHistory();status("Recuperación desde Sheets confirmada: "+data.assessments.length+" registros")}catch(err){status("No se pudo recuperar directamente del GAS ("+err.message+"). Si es un bloqueo CORS, los registros locales están a salvo.",true)}
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.tab)));
-document.querySelectorAll("[id^='field-']").forEach(f=>f.addEventListener("input",currentFields));
+
 el("step-nav").addEventListener("click",e=>{const b=e.target.closest("[data-step]");if(b){step=Number(b.dataset.step);renderStep()}});
 el("step-questions").addEventListener("click",e=>{const b=e.target.closest("[data-criterion]");if(b)setChoice(b)});
 el("step-questions").addEventListener("input",e=>{const node=e.target;if(node.dataset.note){current.scores[node.dataset.note]??={};current.scores[node.dataset.note][node.dataset.noteKey]=node.value;localDraft()}});
