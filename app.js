@@ -39,6 +39,7 @@ function rowScore(ev,predicate){let vs=itemsFor(ev).filter(predicate).map(i=>rat
 function totalAnswered(ev){return itemsFor(ev).filter(i=>rating(ev.scores?.[i.id]?.value)!==null).length}
 function labelScore(v){return v===2?"Cumple":v===1?"Parcial":v===0?"No cumple":"Sin evaluar"}
 function classScore(v){return v===2?"yes":v===1?"partial":v===0?"no":"na"}
+function criterionParts(text){const m=String(text||"").match(/^(.+?\?)\s*\(([^()]*)\)\s*$/);return m?{question:m[1],evidence:m[2]}:{question:String(text||""),evidence:""}}
 function dateLabel(s){try{return new Date(s+"T12:00:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"})}catch(e){return s||""}}
 function localDraft(){try{localStorage.setItem(DRAFTKEY,JSON.stringify(current))}catch(e){status("Espacio local insuficiente. Descarga un respaldo JSON.",true)}}
 function status(msg,bad=false){el("status").textContent=msg;el("status").classList.toggle("error",bad)}
@@ -52,15 +53,18 @@ function renderStepNav(){
  const answered=totalAnswered(current);el("progress-label").textContent=answered+" de "+ITEMS.length+" criterios evaluados";
  el("progress-fill").style.width=(answered/ITEMS.length*100)+"%";
  el("progress-global").textContent=pct(rowScore(current,()=>true));
+ const older=JSON.stringify(current.catalog)!==JSON.stringify(catalogTemplate);
+ el("catalog-version-note").hidden=!older;
+ el("catalog-version-note").textContent=older?"Esta evaluación conserva su cuestionario original ("+ITEMS.length+" preguntas). Para usar las "+itemsOf(catalogTemplate).length+" actuales, pulsa Nueva evaluación.":"";
 }
 function renderStep(){
  activateCatalog(current);
  const s=STEPS[step];el("step-pillar").textContent=s.pillar;el("step-title").textContent=s.name;
  el("step-count").textContent="Elemento "+(step+1)+" de "+STEPS.length;
  const found=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);
- el("step-questions").innerHTML=found.map((item,i)=>{const ans=current.scores[item.id]||{},v=rating(ans.value);const more=ans.evidence||ans.notes||ans.action;
- return '<article class="criterion"><div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(item.criterion)+'</span></div><div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Registrar evidencia y observaciones</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Fuente, fecha, muestra o porcentaje observado" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
- el("prev-step").disabled=step===0;el("next-step").innerHTML=step===STEPS.length-1?'Ir a resultados <i class="fa-solid fa-chart-pie"></i>':'Siguiente elemento <i class="fa-solid fa-arrow-right"></i>';
+ el("step-questions").innerHTML=found.map((item,i)=>{const ans=current.scores[item.id]||{},v=rating(ans.value);const more=ans.evidence||ans.notes||ans.action,parts=criterionParts(item.criterion);
+ return '<article class="criterion"><div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(parts.question)+'</span></div>'+(parts.evidence?'<div class="criterion-proof"><i class="fa-regular fa-circle-check"></i> Para comprobarlo: '+escapeHTML(parts.evidence)+'</div>':'')+'<div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Agregar evidencia, observaciones o acciones</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Ej. conteo, correo, fecha, registro o enlace" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
+ el("prev-step").disabled=step===0;el("next-step").innerHTML=step===STEPS.length-1?'Guardar y ver resultados <i class="fa-solid fa-chart-pie"></i>':'Siguiente <i class="fa-solid fa-arrow-right"></i>';
  renderStepNav();
 }
 function setChoice(button){
@@ -88,15 +92,15 @@ async function gasSave(ev){
  }catch(err){
   if(!(err instanceof TypeError))throw err;
   await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body});
-  return "Enviado a GAS sin confirmación por restricciones CORS. Verifica la hoja de cálculo";
+  return "Guardado localmente y enviado a GAS; el navegador no pudo confirmar la recepción. Compruébala en la hoja Evaluaciones de la base de datos.";
  }
 }
-async function saveEvaluation(){
- let saved;try{saved=saveLocal()}catch(e){return}
- status("Guardado en este navegador. Enviando a Google Sheets...");
- showPage("evaluaciones");
+async function saveEvaluation(showResults=false){
+ let saved;try{saved=saveLocal()}catch(e){status("No se pudo guardar: "+e.message,true);return}
+ status("Evaluación guardada en este dispositivo. Sincronizando con GAS...");
+ if(showResults)showPage("dashboard");
  try{const result=await gasSave(saved);status(result)}
- catch(e){status("Guardado local. Error de envío GAS: "+e.message,true)}
+ catch(e){status("Respaldo local conservado. No se confirmó la sincronización: "+e.message,true)}
 }
 function startNew(){if(!confirm("¿Iniciar una nueva evaluación? Guarda la actual antes de continuar."))return;current=blank();step=0;reflectFields();renderStep();status("Nueva evaluación lista.");showPage("nueva")}
 function openEval(id){const obj=store.find(x=>x.id===id);if(!obj)return;current=clone(obj);step=0;localDraft();reflectFields();renderStep();status("Evaluación cargada para revisar o actualizar.");showPage("nueva")}
@@ -235,8 +239,8 @@ el("step-nav").addEventListener("click",e=>{const b=e.target.closest("[data-step
 el("step-questions").addEventListener("click",e=>{const b=e.target.closest("[data-criterion]");if(b)setChoice(b)});
 el("step-questions").addEventListener("input",e=>{const node=e.target;if(node.dataset.note){current.scores[node.dataset.note]??={};current.scores[node.dataset.note][node.dataset.noteKey]=node.value;localDraft()}});
 el("prev-step").onclick=()=>{step=Math.max(0,step-1);renderStep()};
-el("next-step").onclick=()=>{if(step===STEPS.length-1){saveLocal();showPage("dashboard")}else{step++;renderStep()}};
-el("save-eval").onclick=saveEvaluation;el("new-eval").onclick=startNew;el("new-from-list").onclick=startNew;
+el("next-step").onclick=()=>{if(step===STEPS.length-1){saveEvaluation(true)}else{step++;renderStep()}};
+el("save-eval").onclick=()=>saveEvaluation(false);el("new-eval").onclick=startNew;el("new-from-list").onclick=startNew;
 el("history-body").addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;if(t.dataset.edit)openEval(t.dataset.edit);if(t.dataset.view){el("dashboard-select").value=t.dataset.view;showPage("dashboard")}if(t.dataset.delete)removeEval(t.dataset.delete)});
 el("search-evals").oninput=renderHistory;el("dashboard-select").onchange=renderDashboard;
 el("chart-radar-png").onclick=()=>downloadWhiteCanvas(el("radarChart"),"oleolab_madurez_pilares.png");
