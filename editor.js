@@ -62,8 +62,10 @@ el("catalog-editor").addEventListener("input",e=>{
  if(!target)return;
  if(input.dataset.edit==="element")target[0]=input.value;
  else if(target[1]?.[c]!==undefined){
-  const old=criterionParts(target[1][c]);
-  target[1][c]=joinQuestion(input.dataset.edit==="question"?input.value:old.question,input.dataset.edit==="evidence"?input.value:old.evidence);
+  const root=input.closest(".catalog-question");
+  const q=root.querySelector('[data-edit="question"]').value;
+  const evidence=root.querySelector('[data-edit="evidence"]').value;
+  target[1][c]=joinQuestion(q,evidence);
  }
  catalogDirty=true;catalogStatus();
 });
