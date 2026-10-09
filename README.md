@@ -14,15 +14,14 @@ Abrir `index.html` o habilitar **GitHub Pages** desde Settings → Pages → Dep
 
 ## Backend Google Apps Script + Google Sheets
 
-1. Crear una hoja de cálculo nueva para los assessments.
-2. Abrir **Extensiones → Apps Script** y pegar el contenido de `gas/Code.gs`.
-3. En Apps Script, ir a **Configuración del proyecto → Propiedades de secuencia de comandos** y crear `SPREADSHEET_ID` con el ID de la hoja.
-4. **Implementar → Nueva implementación → Aplicación web**, ejecutar como la cuenta propietaria y escoger acceso **solo a los usuarios autorizados** según la configuración de Workspace; conceder permisos.
-5. Copiar la URL que termina en `/exec` y pegarla en la configuración de la app, luego seleccionar **Sincronizar con GAS** o **Recuperar del GAS**.
+1. Abrir la hoja ya creada: **[BD_Assessment_Forecast_Oleolab](https://docs.google.com/spreadsheets/d/1D3iD-qN8fxdMUd7SO60GPexmFecUHXLy3p-C4GvTlZA/edit)** (pestaña `Evaluaciones`, encabezados listos).
+2. En el Sheets, abrir **Extensiones → Apps Script** y pegar completo `gas/Code.gs` en `Código.gs` (reemplazar el contenido inicial), luego guardar. **La ID ya está escrita en el código; no hay que configurar propiedades.**
+3. **Implementar → Nueva implementación → Aplicación web**; ejecutar como la cuenta propietaria y escoger acceso compatible con los usuarios autorizados según la configuración de Workspace; conceder permisos.
+4. Copiar la URL que termina en `/exec` y pegarla en la configuración de la app. Probar **Sincronizar con GAS** o **Recuperar del GAS**.
 
 ### Consideraciones importantes
 
-- **El backend está incluido como código fuente, pero no está desplegado automáticamente.** La autorización de Google, la URL final y la configuración de permisos requieren acciones del propietario.
+- **Google Sheets está creado y preconfigurado y su ID está integrada en Code.gs**, pero el backend todavía no está desplegado. La autorización de Google, la URL final y la configuración de permisos requieren acciones del propietario.
 - Apps Script puede presentar restricciones **CORS/redirecciones en navegadores** al consumir el servicio desde GitHub Pages. Si falla la conexión, utilizar un proxy/API autorizado o alojar la interfaz mediante HTML Service de Apps Script; no considerar sincronizada ninguna evaluación hasta recibir confirmación `ok:true`.
 - Una web app GAS expuesta a **Cualquiera** sin autenticación adicional permite leer y modificar registros. No usar acceso público para datos internos de producción.
 - La sincronización actual es **por lote e ID** (última escritura prevalece); no resuelve conflictos concurrentes de varios evaluadores. Se recomienda usarla inicialmente con un solo responsable de consolidación.
