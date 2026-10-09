@@ -34,3 +34,10 @@ Criterio evaluado: 0 / 1 / 2. Elemento = suma de puntos dividida entre 2×cantid
 ## Datos
 
 La exportación CSV contiene todas las evaluaciones guardadas localmente y la actual, con identificación, pilar, elemento, criterio, calificación, evidencia, observaciones y acción. JSON respalda el objeto completo.
+## URL de implementación proporcionada
+
+- GAS: https://script.google.com/macros/s/AKfycbySBlGPjgi5f8b4pOKwEvaCKBfmjgsi16Hsnj4DM3hE11Iqc5fTyjZNfEjA5lpxJ-CT/exec
+- El frontend ya incorpora esta URL por defecto y el botón **Guardar y sincronizar** conserva copia en el navegador.
+- Verifica la comunicación abriendo `https://script.google.com/macros/s/AKfycbySBlGPjgi5f8b4pOKwEvaCKBfmjgsi16Hsnj4DM3hE11Iqc5fTyjZNfEjA5lpxJ-CT/exec?action=health` en una pestaña y después registrando una evaluación de prueba desde GitHub Pages. El resultado debe quedar en la hoja `Evaluaciones`.
+- Si el navegador bloquea la respuesta por CORS, el frontend informa que **no puede confirmar** la recepción; consultar la hoja directamente. Las evaluaciones permanecen en el almacenamiento local y se pueden exportar como JSON o CSV.
+- Para descargar todas las evaluaciones desde distintos dispositivos a la App, la lectura cross-origin puede requerir una arquitectura autenticada adicional. No publicar JSONP con datos internos.
