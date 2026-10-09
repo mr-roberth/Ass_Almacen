@@ -8,11 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script defer src="app.js?v=3"></script>
+<script defer src="catalog.js?v=4"></script>
+<script defer src="app.js?v=4"></script>
+<script defer src="editor.js?v=4"></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
@@ -24,12 +26,13 @@
  <button class="tab active" data-tab="nueva"><i class="fa-solid fa-clipboard-check"></i> Nueva evaluación</button>
  <button class="tab" data-tab="evaluaciones"><i class="fa-solid fa-folder-open"></i> Evaluaciones</button>
  <button class="tab" data-tab="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
+ <button class="tab" data-tab="criterios"><i class="fa-solid fa-pen-to-square"></i> Editar criterios</button>
 </nav>
 <div id="status" class="notice" role="status" aria-live="polite">Listo. Puedes iniciar o continuar una evaluación.</div>
 <section id="page-nueva" class="view active">
  <div class="panel">
-  <div class="panel-head" style="margin-bottom:0"><div><h2>Evaluación de criterios</h2><p class="subtle">Responde las preguntas, un elemento a la vez, tal como en el assessment de referencia.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div></div>
-  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="help" id="progress-label">0 de 64 criterios evaluados</p>
+  <div class="panel-head" style="margin-bottom:0"><div><h2>Evaluación de criterios</h2><p class="subtle">24 preguntas iniciales con metas comprobables. Valida cada respuesta con registros, fechas o muestras.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div></div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="help" id="progress-label">0 de 24 criterios evaluados</p>
   <div class="wizard-layout">
    <aside class="step-nav" id="step-nav" aria-label="Elementos del assessment"></aside>
    <div class="wizard-main">
@@ -61,16 +64,25 @@
  </div>
  <div class="kpi-grid">
   <div class="kpi"><small>Madurez global</small><strong id="kpi-global">—</strong><small id="kpi-level">Sin evaluar</small></div>
-  <div class="kpi"><small>Criterios evaluados</small><strong id="kpi-answered">0 / 64</strong><small>Del total de 64 criterios</small></div>
+  <div class="kpi"><small>Criterios evaluados</small><strong id="kpi-answered">0 / 24</strong><small>Según el cuestionario de la evaluación</small></div>
   <div class="kpi"><small>Criterios que cumplen</small><strong id="kpi-met">0</strong><small>Con calificación 2</small></div>
-  <div class="kpi"><small>Elementos evaluados</small><strong id="kpi-elements">0 / 16</strong><small>De los 16 elementos</small></div>
+  <div class="kpi"><small>Elementos evaluados</small><strong id="kpi-elements">0 / 8</strong><small>Elementos completos de la evaluación</small></div>
  </div>
  <div class="chart-grid">
   <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-bullseye"></i> Madurez de los pilares</h3><p class="subtle">Gráfico radar · porcentaje de madurez</p></div><button class="btn" id="chart-radar-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="radarChart" aria-label="Radar de pilares" role="img"></canvas></div></div>
-  <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-chart-bar"></i> Cumplimiento por elemento</h3><p class="subtle">16 elementos · barras horizontales</p></div><button class="btn" id="chart-bars-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="barsChart" aria-label="Barras de cumplimiento" role="img"></canvas></div></div>
+  <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-chart-bar"></i> Cumplimiento por elemento</h3><p class="subtle">Elementos evaluados · barras horizontales</p></div><button class="btn" id="chart-bars-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="barsChart" aria-label="Barras de cumplimiento" role="img"></canvas></div></div>
  </div>
  <p id="graph-alert" class="help"></p>
  <div class="panel"><div class="panel-head"><div><h2>Detalle analítico de criterios</h2><p class="subtle">Criterios agrupados por pilar y elemento, con resultado y evidencias.</p></div></div><div id="detail-criteria"></div></div>
+</section>
+<section id="page-criterios" class="view">
+ <div class="panel">
+  <div class="panel-head"><div><h2>Editar preguntas y criterios</h2><p class="subtle">Personaliza las preguntas y sus metas de verificación. Los cuatro pilares se mantienen para comparar la madurez entre periodos.</p></div><span class="chip" id="catalog-count">24 criterios · 8 elementos</span></div>
+  <div class="notice"><strong>Evaluación objetiva:</strong> redacta cada pregunta con una condición medible, una meta y una fuente de evidencia. Ejemplo: “¿Se realizaron ≥95% de los cortes en la fecha prevista? (Bitácora de registros)”. <strong>Cumple</strong> cuando la meta se verifica; <strong>Parcial</strong> cuando existe ejecución, pero es insuficiente; <strong>No cumple</strong> cuando no hay cumplimiento verificable.</div>
+  <div id="catalog-editor"></div>
+  <div class="actions"><button id="catalog-save" class="btn primary"><i class="fa-solid fa-floppy-disk"></i> Guardar criterios</button><button id="catalog-reset" class="btn"><i class="fa-solid fa-rotate-left"></i> Restablecer 24 iniciales</button><button id="catalog-export" class="btn"><i class="fa-solid fa-download"></i> Exportar preguntas</button><label for="catalog-import" class="btn"><i class="fa-solid fa-upload"></i> Importar preguntas</label><input type="file" id="catalog-import" accept=".json" style="display:none"></div>
+  <p class="help" style="margin-top:12px">Las modificaciones se aplican a evaluaciones nuevas. Una evaluación ya respondida mantiene intactos los criterios originales con los que se calificó. Exporta las preguntas si deseas utilizarlas en otro dispositivo.</p>
+ </div>
 </section>
 <footer class="footer">Grupo Oleolab · Assessment de madurez y sostenibilidad · Los datos se guardan localmente y se envían a GAS; verifica la recepción en Sheets cuando el navegador no pueda confirmarla.</footer>
 </main></body></html>
