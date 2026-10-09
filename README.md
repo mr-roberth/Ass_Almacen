@@ -1,47 +1,41 @@
-# Assessment de madurez · Oleolab
+# Oleolab · Assessment de madurez del monitor de insumos críticos
 
-**App en línea:** https://mr-roberth.github.io/Ass_Almacen/
+**Aplicación:** https://mr-roberth.github.io/Ass_Almacen/
 
-Assessment operativo de almacenes con especial atención a factores humanos y evidencia verificable. Basado en la dinámica de `CI4KASH_ASSMT` y con el logo Oleolab desde `mr-roberth/Pruebas/assets/oleolab-logo.png`.
+Cuestionario de evaluación orientado a sostener un monitor útil para Compras, Ventas, Finanzas, Almacén y Planeación, con datos confiables de aceites, materiales de empaque, inventarios, Forecast y fechas de llegada.
 
-## Cuestionario actualizado · Monitor de insumos críticos para Compras
+## Cuestionario actual (octubre de 2026)
 
-El objetivo del assessment no es auditar solamente una aplicación: es evaluar si Almacén y Planeación pueden **entregar periódicamente a Compras un monitor útil y confiable** que anticipe faltantes de **aceites y materiales de empaque** a partir del inventario y las necesidades de producción.
+Catálogo inicial obtenido de **CRITERIOS!A9:E37** del Google Sheets:
+https://docs.google.com/spreadsheets/d/1yGLqGgycMCsg8wpoVaYLzkgkw-bh6KHBZCZFGKlo0lA/edit
 
-- **Confiabilidad:** confianza en el inventario, actualización de movimientos, diferencias físicas, necesidades y cobertura.
-- **Comunicación:** envío del monitor a Compras, alertas comprensibles y seguimiento a materiales críticos.
-- **Disciplina y competencias:** responsables claros, actualizaciones a tiempo y capacidad real del personal para identificar errores e interpretar alertas.
-- **Sostenibilidad:** suplentes, continuidad en ausencias y aprendizaje ante diferencias de inventario o compras urgentes.
+- **29 criterios**, **8 elementos**, **4 pilares**.
+- **Confiabilidad:** confianza en inventario y en el Forecast (confiabilidad, oportunidad y cambios), necesidades y coberturas.
+- **Comunicación:** claridad del monitor para Compras, Ventas y Finanzas, alertas y compromiso de fechas de entrega.
+- **Disciplina y competencias:** responsables de actualizar la información, puntualidad y capacidad para actuar.
+- **Sostenibilidad:** respaldo del personal, instrucciones, seguimiento y mejora de la práctica.
 
-Se mantienen **4 pilares, 8 elementos y 24 criterios**, redactados de forma natural y con fuentes de evidencia sugeridas (conteos, historial, avisos, compromisos, pruebas prácticas). No se imponen porcentajes arbitrarios; el evaluador puede definir metas por criterio en la pestaña Editar criterios.
+Respuestas: **No cumple = 0**, **Parcial = 1**, **Cumple = 2**. Los no evaluados no se incluyen en el promedio de madurez (por eso se muestran resultados parciales durante la captura).
 
-Las evaluaciones anteriores y los catálogos personalizados no se sobrescriben. Al abrir una evaluación histórica se usan las preguntas que tenía al guardarse; los nuevos cuestionarios llevan una copia del catálogo vigente. El cuestionario inicial anterior se migra automáticamente al nuevo si no había sido personalizado; para cargar el nuevo en un navegador con cambios propios, se puede usar **Editar criterios → Restablecer 24 iniciales → Guardar criterios**. No se modifica una evaluación respondida al hacer esto.
+## Interfaz
 
-## Versión anterior · 24 criterios iniciales
+Cuatro pestañas:
 
-- **4 pilares:** Confiabilidad, Comunicación, Disciplina y competencias, Sostenibilidad
-- **8 elementos:** dos por pilar
-- **24 criterios:** tres por elemento, cada uno ofrece una pregunta natural y evidencia para comprobarla
-- Se conservan las calificaciones 0 = No cumple, 1 = Parcial, 2 = Cumple. **Sin evaluar** no se contabiliza en el porcentaje, por lo que los resultados con respuestas pendientes son provisionales.
-- Para evaluar objetivamente, el criterio **Cumple** exige alcanzar la meta indicada con registros verificables; la aplicación ofrece campo de evidencia, observación y acción y muestra el grado de documentación de las respuestas.
-- La vista de evaluación continúa avanzando elemento por elemento; mantiene Dashboard, radar de pilares, barras de elementos, criterios analíticos, PDF, PNG y CSV.
+1. **Evaluar:** responder por elemento; se muestra la evidencia sugerida debajo de cada pregunta; puedes agregar evidencia, observaciones y acciones. Avance automático por los ocho elementos.
+2. **Resultados:** nivel de madurez, KPI, radar de pilares, barras por elemento, descarga de PNG y reporte PDF.
+3. **Historial:** consultar y reabrir evaluaciones, CSV y respaldo JSON.
+4. **Preguntas:** editor visual de criterios y evidencias. Puedes modificar textos, agregar/eliminar preguntas, agregar/eliminar elementos, restaurar los 29 oficiales, guardar, descartar cambios, exportar e importar el catálogo.
 
-### Editor de preguntas dentro de la web
+Los cuatro pilares permanecen fijos; los elementos y criterios se pueden personalizar. La configuración se guarda en el **almacenamiento del navegador**. **No se sincroniza automáticamente con el catálogo del Google Sheets ni con otros dispositivos**; utiliza las opciones de exportar/importar JSON. Cada evaluación guarda su propia copia de preguntas para no recalificar la historia cuando cambien los criterios. Las evaluaciones antiguas de 24 o 64 criterios no se eliminan ni se migran si ya fueron respondidas.
 
-Abrir pestaña **Editar criterios**: cambiar el nombre de elementos, modificar el texto de cada pregunta o umbral, agregar o quitar criterios, y agregar o quitar elementos. Los cuatro pilares se mantienen para comparaciones homogéneas. Pulsar **Guardar criterios**.
+## GAS y seguridad
 
-El catálogo editable se guarda en el navegador del dispositivo. Puedes exportar/importar un JSON de preguntas para moverlo a otro dispositivo, o respaldarlo junto con el historial en **Evaluaciones → Respaldo JSON**. Restaurar las 24 iniciales no borra evaluaciones anteriores.
+- Backend existente: `gas/Code.gs`
+- Base de datos de evaluaciones GAS: https://docs.google.com/spreadsheets/d/1D3iD-qN8fxdMUd7SO60GPexmFecUHXLy3p-C4GvTlZA/edit
+- Endpoint desplegado: https://script.google.com/macros/s/AKfycbySBlGPjgi5f8b4pOKwEvaCKBfmjgsi16Hsnj4DM3hE11Iqc5fTyjZNfEjA5lpxJ-CT/exec
 
-**Versionado histórico:** cada evaluación nueva guarda una copia completa de su catálogo. Las evaluaciones anteriores de 64 criterios se siguen mostrando y calculando con sus preguntas antiguas (aunque no incorporaran aún la propiedad `catalog`). Cuando modificas el catálogo, solo se usa en evaluaciones nuevas; las evaluaciones ya calificadas no se reescriben.
+**Guardar y sincronizar** almacena la evaluación local y envía su catálogo y sus respuestas dentro del campo `payload_json` a GAS usando `saveBatch`. **Guardar y ver resultados** también intenta enviar a GAS.
 
-## Almacenamiento
+El envío puede llegar sin permitir leer su respuesta por **CORS**. En ese caso, la App indica que no puede confirmar el guardado y conserva la copia local; revisar la pestaña `Evaluaciones` de la BD GAS. La recuperación multi-dispositivo también puede bloquearse por CORS. No confundir esa base de datos con el Sheets independiente usado como plantilla de criterios.
 
-- Google Sheets: https://docs.google.com/spreadsheets/d/1D3iD-qN8fxdMUd7SO60GPexmFecUHXLy3p-C4GvTlZA/edit
-- GAS: `gas/Code.gs`
-- URL desplegada: https://script.google.com/macros/s/AKfycbySBlGPjgi5f8b4pOKwEvaCKBfmjgsi16Hsnj4DM3hE11Iqc5fTyjZNfEjA5lpxJ-CT/exec
-
-Los registros de evaluaciones incluyen su catálogo propio dentro de `payload_json`, compatible con el GAS ya desplegado. El **catálogo de edición** es local y no se sincroniza automáticamente entre navegadores: se comparte exportando/importando el JSON. El guardado de evaluaciones intenta enviar a GAS, pero algunos navegadores impiden leer la respuesta por CORS; consulta Sheets para confirmar recepción. La recuperación desde GAS también puede estar restringida por CORS.
-
-## Seguridad
-
-No habilitar acceso anónimo al GAS para información interna sin autenticación efectiva. GitHub Pages por sí solo no autentica usuarios; proteger las evaluaciones y sus respaldos.
+No publicar un GAS con datos internos sin autenticación y control de acceso. GitHub Pages es estático y no proporciona identidad por usuario.
