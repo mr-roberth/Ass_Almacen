@@ -7,6 +7,7 @@ Aplicación de evaluación de la práctica de cumplimiento del Forecast vinculad
 ## Dinámica simplificada (basada en CI4KASH_ASSMT)
 
 - Tres pestañas: **Nueva evaluación**, **Evaluaciones** y **Dashboard**.
+- La pestaña **Nueva evaluación** abre directamente las preguntas: no existe formulario superior de datos ni captura del cumplimiento real del Forecast. La fecha y el título de cada evaluación se asignan automáticamente.
 - Cuestionario guiado: 4 pilares, 16 elementos y 64 criterios, uno por uno con respuestas **Cumple (2), Parcial (1), No cumple (0)** y evidencia/observación/acción opcionales.
 - Selección entre evaluaciones y resumen ejecutivo con radar por pilar y barras horizontales por elemento.
 - **Exportación PNG individual** de cada gráfica, **informe PDF** con resumen, gráficas y detalle de todos los criterios; CSV consolidado y respaldo JSON.
@@ -23,7 +24,7 @@ El botón **Guardar evaluación** registra localmente y envía al GAS. Debido a 
 
 ## Calificación
 
-Para los criterios evaluados: 0 = No cumple, 1 = Parcial y 2 = Cumple. Los no evaluados se excluyen temporalmente del promedio. **Pilar, elemento y madurez global** se calculan como puntos obtenidos divididos entre dos veces el número de criterios evaluados, por 100. Los niveles son Inicial (0–25), Básico (>25–50), Estandarizado (>50–75), Controlado (>75–90), Sostenible (>90–100). El cumplimiento real del Forecast es una métrica independiente.
+Para los criterios evaluados: 0 = No cumple, 1 = Parcial y 2 = Cumple. Los no evaluados se excluyen temporalmente del promedio. **Pilar, elemento y madurez global** se calculan como puntos obtenidos divididos entre dos veces el número de criterios evaluados, por 100. Los niveles son Inicial (0–25), Básico (>25–50), Estandarizado (>50–75), Controlado (>75–90), Sostenible (>90–100). El dashboard se centra exclusivamente en madurez, número de criterios respondidos y elementos completados.
 
 ## Seguridad
 
