@@ -1,15 +1,14 @@
 /** Assessment Forecast · Oleolab
- * Crear una hoja de Google Sheets, copiar su ID y establecer la propiedad
- * de proyecto SPREADSHEET_ID. Publicar como aplicación web.
+ * La hoja BD_Assessment_Forecast_Oleolab ya está creada y conectada por ID.
+ * Copiar este archivo a Apps Script desde esa hoja e implementar como web app.
  * IMPORTANTE: Un despliegue público SIN autenticación permite leer/escribir
  * evaluaciones; emplear controles de acceso de Google Workspace.
  */
+const SPREADSHEET_ID = "1D3iD-qN8fxdMUd7SO60GPexmFecUHXLy3p-C4GvTlZA";
 const SHEET_NAME = "Evaluaciones";
 const HEADERS = ["id","updated_at","period","date","area","owner","forecast","payload_json"];
 function sheet_(){
-  const id=PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
-  if(!id)throw Error("Configura la propiedad SPREADSHEET_ID en el proyecto GAS.");
-  const ss=SpreadsheetApp.openById(id);
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh=ss.getSheetByName(SHEET_NAME);
   if(!sh){sh=ss.insertSheet(SHEET_NAME);sh.appendRow(HEADERS);sh.setFrozenRows(1);}
   return sh;
