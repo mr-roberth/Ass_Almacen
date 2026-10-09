@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script defer src="catalog.js?v=6"></script>
-<script defer src="app.js?v=6"></script>
-<script defer src="editor.js?v=6"></script>
+<script defer src="catalog.js?v=7"></script>
+<script defer src="app.js?v=7"></script>
+<script defer src="editor.js?v=7"></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
@@ -78,10 +78,18 @@
 <section id="page-criterios" class="view">
  <div class="panel">
   <div class="panel-head"><div><h2>Preguntas de evaluación</h2><p class="subtle">Ajusta las preguntas a la rutina real del monitor de insumos críticos que recibe Compras. Los cuatro pilares permanecen para comparar las evaluaciones.</p></div><span class="chip" id="catalog-count">29 criterios · 8 elementos</span></div>
-  <div class="notice"><strong>Evaluación objetiva:</strong> pide una evidencia concreta: conteo físico, historial de movimientos, envío a Compras, prueba práctica o seguimiento de alertas. <strong>Cumple</strong> cuando la práctica se realiza y puede comprobarse; <strong>Parcial</strong> cuando es irregular o está incompleta; <strong>No cumple</strong> cuando no se realiza o no puede demostrarse. Si tu equipo usa metas porcentuales, puedes agregarlas a cada criterio.</div>
+  <div class="notice"><strong>Edición sencilla:</strong> abre un pilar, escribe la pregunta y cómo comprobarla. Puedes agregar o eliminar preguntas y elementos. Las respuestas anteriores no cambian.</div>
+  <div class="catalog-toolbar">
+    <button id="catalog-save" class="btn primary" disabled><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+    <button id="catalog-cancel" class="btn"><i class="fa-solid fa-rotate-left"></i> Descartar cambios</button>
+    <button id="catalog-reset" class="btn"><i class="fa-solid fa-arrow-rotate-left"></i> Usar 29 oficiales</button>
+    <button id="catalog-export" class="btn"><i class="fa-solid fa-download"></i> Exportar</button>
+    <label for="catalog-import" class="btn"><i class="fa-solid fa-upload"></i> Importar</label>
+    <input type="file" id="catalog-import" accept=".json" style="display:none">
+    <span id="catalog-pending" class="catalog-pending" hidden><i class="fa-solid fa-circle-exclamation"></i> Cambios sin guardar</span>
+  </div>
   <div id="catalog-editor"></div>
-  <div class="actions"><button id="catalog-save" class="btn primary"><i class="fa-solid fa-floppy-disk"></i> Guardar criterios</button><button id="catalog-reset" class="btn"><i class="fa-solid fa-rotate-left"></i> Restablecer 29 oficiales</button><button id="catalog-export" class="btn"><i class="fa-solid fa-download"></i> Exportar preguntas</button><label for="catalog-import" class="btn"><i class="fa-solid fa-upload"></i> Importar preguntas</label><input type="file" id="catalog-import" accept=".json" style="display:none"></div>
-  <p class="help" style="margin-top:12px">Las modificaciones se aplican a evaluaciones nuevas. Una evaluación ya respondida mantiene intactos los criterios originales con los que se calificó. Exporta las preguntas si deseas utilizarlas en otro dispositivo.</p>
+  <p class="help" style="margin-top:12px">Al guardar, el catálogo actualizado queda en este navegador para las siguientes evaluaciones. Si ya calificaste una evaluación, sus preguntas se conservan. Para compartir cambios en otro dispositivo, exporta e importa el archivo JSON. El catálogo del Google Sheets independiente no se modifica desde aquí.</p>
  </div>
 </section>
 <footer class="footer">Grupo Oleolab · Assessment de madurez y sostenibilidad · Los datos se guardan localmente y se envían a GAS; verifica la recepción en Sheets cuando el navegador no pueda confirmarla.</footer>
