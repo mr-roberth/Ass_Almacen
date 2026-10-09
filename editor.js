@@ -1,12 +1,13 @@
 /* Editor local de catálogo: no altera versiones históricas. */
 let catalogDirty=false;
+let catalogOpenPillar=0;
 function catalogCount(c){return {elements:c.reduce((n,p)=>n+p[1].length,0),criteria:c.reduce((n,p)=>n+p[1].reduce((v,e)=>v+e[1].length,0),0)}}
 function renderEditor(){
  const counts=catalogCount(editingCatalog);
  el("catalog-count").textContent=counts.criteria+" criterios · "+counts.elements+" elementos"+(catalogDirty?" · sin guardar":"");
  el("catalog-editor").innerHTML=editingCatalog.map(([pillar,elements],p)=>{
   const count=elements.reduce((n,e)=>n+e[1].length,0);
-  return '<details class="catalog-pillar" '+(p===0?'open':'')+'><summary><strong>'+escapeHTML(pillar)+'</strong><span>'+count+' criterios</span></summary><div class="catalog-body">'+
+  return '<details class="catalog-pillar" '+(p===catalogOpenPillar?'open':'')+'><summary><strong>'+escapeHTML(pillar)+'</strong><span>'+count+' criterios</span></summary><div class="catalog-body">'+
   elements.map(([name,questions],e)=>
    '<div class="catalog-element"><div class="catalog-element-title"><label class="field">Elemento<input data-edit="element" data-p="'+p+'" data-e="'+e+'" maxlength="120" value="'+escapeHTML(name)+'" aria-label="Nombre del elemento"></label><button class="btn" data-action="remove-element" data-p="'+p+'" data-e="'+e+'" '+(elements.length===1?"disabled":"")+'><i class="fa-solid fa-trash"></i> Quitar elemento</button></div>'+
     questions.map((question,c)=>'<div class="catalog-question"><span class="catalog-number">'+(c+1)+'</span><label class="field">Pregunta o criterio verificable<textarea rows="2" maxlength="700" data-edit="question" data-p="'+p+'" data-e="'+e+'" data-c="'+c+'" aria-label="Editar criterio">'+escapeHTML(question)+'</textarea></label><button class="btn danger" data-action="remove-question" data-p="'+p+'" data-e="'+e+'" data-c="'+c+'" '+(questions.length===1?"disabled":"")+' title="Quitar pregunta" aria-label="Quitar pregunta"><i class="fa-solid fa-xmark"></i></button></div>').join("")+
@@ -29,6 +30,7 @@ function persistCatalog(){
  status("Preguntas guardadas. Se aplicarán a nuevas evaluaciones; las anteriores conservan su cuestionario.");
  return true;
 }
+el("catalog-editor").addEventListener("toggle",e=>{if(e.target.matches(".catalog-pillar")&&e.target.open){const list=[...el("catalog-editor").querySelectorAll(".catalog-pillar")];const idx=list.indexOf(e.target);if(idx>=0)catalogOpenPillar=idx}},true);
 el("catalog-editor").addEventListener("input",e=>{
  const n=e.target;
  if(!n.dataset.edit)return;
@@ -44,6 +46,7 @@ el("catalog-editor").addEventListener("click",e=>{
  const button=e.target.closest("[data-action]");if(!button)return;
  const action=button.dataset.action,p=Number(button.dataset.p),i=Number(button.dataset.e),c=Number(button.dataset.c);
  if(!editingCatalog[p])return;
+ catalogOpenPillar=p;
  const elements=editingCatalog[p][1];
  if(action==="add-element"&&elements.length<12)elements.push(["Nuevo elemento",["¿Se cumple la meta definida en el proceso? (Indicar evidencia y plazo)"]]);
  if(action==="remove-element"&&elements.length>1){if(!confirm("¿Quitar este elemento y sus preguntas del catálogo futuro? Las evaluaciones guardadas no se modifican."))return;elements.splice(i,1)}
