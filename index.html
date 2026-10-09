@@ -4,19 +4,19 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assessment de Madurez | Oleolab</title>
 <meta name="theme-color" content="#174f3c">
-<meta name="description" content="Assessment de madurez y sostenibilidad de la práctica de cumplimiento del Forecast de Oleolab.">
+<meta name="description" content="Assessment de madurez y sostenibilidad de las prácticas de Almacén de Oleolab.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script defer src="app.js?v=2"></script>
+<script defer src="app.js?v=3"></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
-  <div class="identity"><div class="logo-plate"><img src="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png" alt="Logotipo Oleolab" onerror="this.style.display='none'"></div><div><h1>Assessment de Madurez</h1><p>Práctica de cumplimiento del Forecast · Almacén y Planeación</p></div></div>
+  <div class="identity"><div class="logo-plate"><img src="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png" alt="Logotipo Oleolab" onerror="this.style.display='none'"></div><div><h1>Assessment de Madurez</h1><p>Evaluación de madurez y sostenibilidad · Almacén</p></div></div>
   <span class="header-note"><i class="fa-solid fa-chart-line"></i> Madurez y sostenibilidad operativa</span>
 </div></header>
 <main class="shell">
@@ -28,19 +28,7 @@
 <div id="status" class="notice" role="status" aria-live="polite">Listo. Puedes iniciar o continuar una evaluación.</div>
 <section id="page-nueva" class="view active">
  <div class="panel">
-  <div class="panel-head"><div><h2>Registro de evaluación</h2><p class="subtle">Datos generales del periodo y los responsables.</p></div><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva</button></div>
-  <div class="field-grid">
-   <label class="field">Periodo evaluado<input id="field-period" placeholder="Ej. Semana 42 / Octubre 2026"></label>
-   <label class="field">Fecha<input id="field-date" type="date"></label>
-   <label class="field">Área / Proceso<input id="field-area" placeholder="Almacén de materiales de empaque"></label>
-   <label class="field">Evaluador<input id="field-owner" placeholder="Nombre del evaluador"></label>
-   <label class="field">Responsable del proceso<input id="field-representative" placeholder="Responsable de la práctica"></label>
-   <label class="field">Cumplimiento real Forecast (%)<input id="field-forecast" type="number" min="0" max="100" step="0.01" placeholder="Opcional"></label>
-  </div>
-  <p class="help" style="margin:12px 0 0">El cumplimiento del Forecast es un indicador independiente del índice de madurez.</p>
- </div>
- <div class="panel">
-  <div class="panel-head" style="margin-bottom:0"><div><h2>Evaluación por elementos</h2><p class="subtle">Selecciona la respuesta de cada criterio. Evidencias y observaciones son opcionales.</p></div><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div>
+  <div class="panel-head" style="margin-bottom:0"><div><h2>Evaluación de criterios</h2><p class="subtle">Responde las preguntas, un elemento a la vez, tal como en el assessment de referencia.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div></div>
   <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="help" id="progress-label">0 de 64 criterios evaluados</p>
   <div class="wizard-layout">
    <aside class="step-nav" id="step-nav" aria-label="Elementos del assessment"></aside>
@@ -58,8 +46,8 @@
 <section id="page-evaluaciones" class="view">
  <div class="panel">
   <div class="panel-head"><div><h2>Evaluaciones realizadas</h2><p class="subtle" id="hist-count">0 evaluaciones</p></div><div class="actions"><button class="btn primary" id="new-from-list"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><button class="btn" id="refresh-cloud" title="La recuperación puede estar restringida por CORS"><i class="fa-solid fa-cloud-arrow-down"></i> Consultar Sheets</button></div></div>
-  <div class="filters"><input class="search" type="search" id="search-evals" placeholder="Buscar por periodo, área o evaluador"></div>
-  <div class="table-scroll"><table><thead><tr><th>Periodo / Área</th><th>Fecha</th><th>Evaluador</th><th>Madurez</th><th>Acciones</th></tr></thead><tbody id="history-body"></tbody></table></div>
+  <div class="filters"><input class="search" type="search" id="search-evals" placeholder="Buscar por fecha o evaluación"></div>
+  <div class="table-scroll"><table><thead><tr><th>Evaluación</th><th>Fecha</th><th>Criterios</th><th>Madurez</th><th>Acciones</th></tr></thead><tbody id="history-body"></tbody></table></div>
  </div>
  <div class="panel"><div class="panel-head"><div><h2>Exportar datos</h2><p class="subtle">CSV de criterios para análisis y respaldo JSON para recuperar evaluaciones.</p></div></div>
   <div class="actions"><button id="export-csv" class="btn"><i class="fa-solid fa-file-csv"></i> Descargar CSV</button><button id="export-json" class="btn"><i class="fa-solid fa-download"></i> Respaldo JSON</button><label class="btn" for="import-json"><i class="fa-solid fa-upload"></i> Importar JSON</label><input id="import-json" type="file" accept=".json" style="display:none"></div>
@@ -68,14 +56,14 @@
 </section>
 <section id="page-dashboard" class="view">
  <div class="panel">
-  <div class="panel-head"><div><h2>Dashboard de resultados</h2><p class="subtle" id="dashboard-subtitle">Vista ejecutiva de la madurez por evaluación.</p></div><div class="actions"><button class="btn primary" id="report-pdf"><i class="fa-solid fa-file-pdf"></i> Descargar informe PDF</button></div></div>
+  <div class="panel-head"><div><h2>Dashboard de resultados</h2><p class="subtle" id="dashboard-subtitle">Resultados de los cuatro pilares y sus criterios.</p></div><div class="actions"><button class="btn primary" id="report-pdf"><i class="fa-solid fa-file-pdf"></i> Descargar informe PDF</button></div></div>
   <label class="field" style="max-width:420px">Seleccionar evaluación<select id="dashboard-select"></select></label>
  </div>
  <div class="kpi-grid">
   <div class="kpi"><small>Madurez global</small><strong id="kpi-global">—</strong><small id="kpi-level">Sin evaluar</small></div>
   <div class="kpi"><small>Criterios evaluados</small><strong id="kpi-answered">0 / 64</strong><small>Del total de 64 criterios</small></div>
   <div class="kpi"><small>Criterios que cumplen</small><strong id="kpi-met">0</strong><small>Con calificación 2</small></div>
-  <div class="kpi"><small>Cumplimiento real Forecast</small><strong id="kpi-compliance">—</strong><small>Indicador independiente</small></div>
+  <div class="kpi"><small>Elementos evaluados</small><strong id="kpi-elements">0 / 16</strong><small>De los 16 elementos</small></div>
  </div>
  <div class="chart-grid">
   <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-bullseye"></i> Madurez de los pilares</h3><p class="subtle">Gráfico radar · porcentaje de madurez</p></div><button class="btn" id="chart-radar-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="radarChart" aria-label="Radar de pilares" role="img"></canvas></div></div>
