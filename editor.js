@@ -57,8 +57,8 @@ el("catalog-editor").addEventListener("toggle",e=>{
 el("catalog-editor").addEventListener("input",e=>{
  const input=e.target;
  if(!input.dataset.edit)return;
- const p=Number(input.dataset.p),e=Number(input.dataset.e),c=Number(input.dataset.c);
- const target=editingCatalog[p]?.[1]?.[e];
+ const p=Number(input.dataset.p),elementIndex=Number(input.dataset.e),c=Number(input.dataset.c);
+ const target=editingCatalog[p]?.[1]?.[elementIndex];
  if(!target)return;
  if(input.dataset.edit==="element")target[0]=input.value;
  else if(target[1]?.[c]!==undefined){
