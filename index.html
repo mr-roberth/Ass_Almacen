@@ -8,17 +8,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script defer src="catalog.js?v=4"></script>
-<script defer src="app.js?v=4"></script>
-<script defer src="editor.js?v=4"></script>
+<script defer src="catalog.js?v=5"></script>
+<script defer src="app.js?v=5"></script>
+<script defer src="editor.js?v=5"></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
-  <div class="identity"><div class="logo-plate"><img src="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png" alt="Logotipo Oleolab" onerror="this.style.display='none'"></div><div><h1>Assessment de Madurez</h1><p>Evaluación de madurez y sostenibilidad · Almacén</p></div></div>
+  <div class="identity"><div class="logo-plate"><img src="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png" alt="Logotipo Oleolab" onerror="this.style.display='none'"></div><div><h1>Assessment de Madurez</h1><p>Monitor de insumos críticos para Compras · Almacén y Planeación</p></div></div>
   <span class="header-note"><i class="fa-solid fa-chart-line"></i> Madurez y sostenibilidad operativa</span>
 </div></header>
 <main class="shell">
@@ -31,7 +31,7 @@
 <div id="status" class="notice" role="status" aria-live="polite">Listo. Puedes iniciar o continuar una evaluación.</div>
 <section id="page-nueva" class="view active">
  <div class="panel">
-  <div class="panel-head" style="margin-bottom:0"><div><h2>Evaluación de criterios</h2><p class="subtle">24 preguntas iniciales con metas comprobables. Valida cada respuesta con registros, fechas o muestras.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div></div>
+  <div class="panel-head" style="margin-bottom:0"><div><h2>¿Podemos sostener un monitor confiable para Compras?</h2><p class="subtle">24 preguntas sobre inventarios de aceites y materiales de empaque, coordinación, responsabilidad y continuidad. Califica según evidencia real.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div></div>
   <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="help" id="progress-label">0 de 24 criterios evaluados</p>
   <div class="wizard-layout">
    <aside class="step-nav" id="step-nav" aria-label="Elementos del assessment"></aside>
@@ -77,8 +77,8 @@
 </section>
 <section id="page-criterios" class="view">
  <div class="panel">
-  <div class="panel-head"><div><h2>Editar preguntas y criterios</h2><p class="subtle">Personaliza las preguntas y sus metas de verificación. Los cuatro pilares se mantienen para comparar la madurez entre periodos.</p></div><span class="chip" id="catalog-count">24 criterios · 8 elementos</span></div>
-  <div class="notice"><strong>Evaluación objetiva:</strong> redacta cada pregunta con una condición medible, una meta y una fuente de evidencia. Ejemplo: “¿Se realizaron ≥95% de los cortes en la fecha prevista? (Bitácora de registros)”. <strong>Cumple</strong> cuando la meta se verifica; <strong>Parcial</strong> cuando existe ejecución, pero es insuficiente; <strong>No cumple</strong> cuando no hay cumplimiento verificable.</div>
+  <div class="panel-head"><div><h2>Editar preguntas y criterios</h2><p class="subtle">Ajusta las preguntas a la rutina real del monitor de insumos críticos que recibe Compras. Los cuatro pilares permanecen para comparar las evaluaciones.</p></div><span class="chip" id="catalog-count">24 criterios · 8 elementos</span></div>
+  <div class="notice"><strong>Evaluación objetiva:</strong> pide una evidencia concreta: conteo físico, historial de movimientos, envío a Compras, prueba práctica o seguimiento de alertas. <strong>Cumple</strong> cuando la práctica se realiza y puede comprobarse; <strong>Parcial</strong> cuando es irregular o está incompleta; <strong>No cumple</strong> cuando no se realiza o no puede demostrarse. Si tu equipo usa metas porcentuales, puedes agregarlas a cada criterio.</div>
   <div id="catalog-editor"></div>
   <div class="actions"><button id="catalog-save" class="btn primary"><i class="fa-solid fa-floppy-disk"></i> Guardar criterios</button><button id="catalog-reset" class="btn"><i class="fa-solid fa-rotate-left"></i> Restablecer 24 iniciales</button><button id="catalog-export" class="btn"><i class="fa-solid fa-download"></i> Exportar preguntas</button><label for="catalog-import" class="btn"><i class="fa-solid fa-upload"></i> Importar preguntas</label><input type="file" id="catalog-import" accept=".json" style="display:none"></div>
   <p class="help" style="margin-top:12px">Las modificaciones se aplican a evaluaciones nuevas. Una evaluación ya respondida mantiene intactos los criterios originales con los que se calificó. Exporta las preguntas si deseas utilizarlas en otro dispositivo.</p>
