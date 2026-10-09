@@ -39,7 +39,7 @@ function rowScore(ev,predicate){let vs=itemsFor(ev).filter(predicate).map(i=>rat
 function totalAnswered(ev){return itemsFor(ev).filter(i=>rating(ev.scores?.[i.id]?.value)!==null).length}
 function labelScore(v){return v===2?"Cumple":v===1?"Parcial":v===0?"No cumple":"Sin evaluar"}
 function classScore(v){return v===2?"yes":v===1?"partial":v===0?"no":"na"}
-function criterionParts(text){const m=String(text||"").match(/^(.+?\?)\s*\(([^()]*)\)\s*$/);return m?{question:m[1],evidence:m[2]}:{question:String(text||""),evidence:""}}
+function criterionParts(text){const m=String(text||"").match(/^(.+?)\s+\(([^()]*)\)\s*$/);return m?{question:m[1],evidence:m[2]}:{question:String(text||""),evidence:""}}
 function dateLabel(s){try{return new Date(s+"T12:00:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"})}catch(e){return s||""}}
 function localDraft(){try{localStorage.setItem(DRAFTKEY,JSON.stringify(current))}catch(e){status("Espacio local insuficiente. Descarga un respaldo JSON.",true)}}
 function status(msg,bad=false){el("status").textContent=msg;el("status").classList.toggle("error",bad)}
