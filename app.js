@@ -127,7 +127,10 @@ function renderDashboard(){
  el("kpi-answered").textContent=d.answered+"/"+ITEMS.length;
  el("kpi-elements").textContent=STEPS.filter(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e).every(x=>rating(ev.scores?.[x.id]?.value)!==null)).length+" / "+STEPS.length;
  el("kpi-met").textContent=ITEMS.filter(x=>rating(ev.scores?.[x.id]?.value)===2).length;
- el("dashboard-subtitle").textContent=(ev.period||"Evaluación") + " · " + (ev.date||"");
+ const assessed=itemsFor(ev).filter(x=>rating(ev.scores?.[x.id]?.value)!==null);
+ const evidenceCount=assessed.filter(x=>String(ev.scores?.[x.id]?.evidence||"").trim().length>0).length;
+ el("kpi-evidence").textContent=evidenceCount+" de "+assessed.length+" respuestas con evidencia";
+ el("dashboard-subtitle").textContent=(ev.period||"Evaluación") + " · " + (ev.date||"") + (d.answered<ITEMS.length?" · Resultado parcial: "+d.answered+"/"+ITEMS.length+" criterios":"");
  makeCharts(ev);
  renderDetails(ev);
 }
