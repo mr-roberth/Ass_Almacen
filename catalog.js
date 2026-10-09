@@ -1,3 +1,4 @@
+/* Catálogo oficial Oleolab (29 criterios) procedente de CRITERIOS!A9:E37 del Assessment en Google Sheets. Mantiene evidencia sugerida al final de cada pregunta. */
 /* Oleolab · Assessment de sostenibilidad del monitor de insumos críticos para Compras
  * Base sugerida: 4 pilares, 8 elementos, 24 preguntas naturales y verificables.
  * Las metas exactas deben acordarse por proceso; las respuestas requieren evidencias.
@@ -54,7 +55,7 @@ const PREVIOUS_DEFAULT_CATALOG=[
 ]]
 ];
 
-const DEFAULT_CATALOG=[
+const DEFAULT_CATALOG_24=[
 ["Confiabilidad",[
  ["Confianza en el inventario",[
   "¿Las existencias de aceites y materiales de empaque que aparecen en el monitor coinciden con los conteos físicos revisados? (Conteos cíclicos y diferencias)",
@@ -104,6 +105,97 @@ const DEFAULT_CATALOG=[
  ]]
 ]]
 ];
+const DEFAULT_CATALOG=[
+  [
+    "Confiabilidad",
+    [
+      [
+        "Confianza en el inventario",
+        [
+          "¿Lo que tenemos registrado de aceites y materiales de empaque coincide con lo que realmente hay en el almacén? (Conteos cíclicos y diferencias)",
+          "¿Registramos a tiempo las entradas, salidas y consumos para que el inventario esté actualizado? (Fechas de movimientos y último corte)",
+          "¿Cuando encontramos diferencias de inventario, las revisamos y aclaramos antes de compartir la información con Compras? (Ajustes y aclaraciones documentadas)"
+        ]
+      ],
+      [
+        "Necesidades y cobertura",
+        [
+          "¿Para calcular cuánto aceite y material de empaque necesitamos, usamos el Forecast más reciente? (Plan y cálculo de materiales)",
+          "¿Antes de solicitar una compra, tomamos en cuenta lo que ya tenemos y lo que está por llegar? (Cálculo de cobertura)",
+          "¿El monitor de critircos muestra con claridad qué material podría faltar, cuánto hace falta y para cuándo lo necesitamos? (Revisión de materiales críticos)",
+          "¿El Forecast llega completo y en la fecha acordada, con tiempo suficiente para preparar las necesidades de aceites y materiales de empaque? (Fecha de recepción, versión del Forecast y datos completos)",
+          "¿Las cantidades y fechas del Forecast son confiables y están revisadas con Ventas y Planeación antes de calcular qué necesitamos comprar? (Forecast validado contra el plan de ventas y producción)",
+          "¿El Forecast se mantiene estable y, cuando hay cambios de último momento, nos avisan a tiempo para ajustar las compras? (Historial de versiones, cambios y avisos oportunos)"
+        ]
+      ]
+    ]
+  ],
+  [
+    "Comunicación",
+    [
+      [
+        "Información útil para Compras",
+        [
+          "¿Entregamos a Compras el monitor actualizado en la fecha acordada, sin que tengan que pedirlo? (Registro de envío)",
+          "¿Compras puede ver fácilmente qué aceites o materiales de empaque están en riesgo de faltar y cuáles son más urgentes? (Revisión conjunta del monitor)",
+          "¿Cuando cambia una necesidad, el inventario o una fecha de entrega, avisamos a Compras a tiempo? (Avisos y actualizaciones)",
+          "¿Las personas de Compras, Ventas y Finanzas entienden la información del monitor y saben qué materiales requieren atención? (Revisión del monitor con las tres áreas o prueba práctica)"
+        ]
+      ],
+      [
+        "Seguimiento de materiales críticos",
+        [
+          "¿Sabemos quién debe dar seguimiento a cada material que está en riesgo de faltar y qué acción le corresponde? (Lista de pendientes)",
+          "¿Compras y Planeación revisan si las fechas de entrega permiten tener el material antes de que se necesite? (Fechas de compra y llegada)",
+          "¿Damos seguimiento a los pendientes de compras y entregas hasta confirmar que quedaron resueltos? (Seguimiento con responsables y fechas)",
+          "¿Compras nos comparte una fecha clara de llegada para cada pedido pendiente y nos avisa si esa fecha cambia? (Órdenes de compra, fechas comprometidas y actualizaciones)"
+        ]
+      ]
+    ]
+  ],
+  [
+    "Disciplina y competencias",
+    [
+      [
+        "Rutinas y responsabilidades",
+        [
+          "¿Todos tenemos claro quién actualiza el inventario, quién confirma las llegadas y quién revisa el monitor antes de enviarlo? (Responsables definidos)",
+          "¿Las actualizaciones y revisiones se hacen en los tiempos acordados, sin depender de recordatorios? (Historial de cortes)",
+          "¿Cuando aparece una alerta de faltante, alguien la atiende y deja registro de lo que hizo? (Bitácora de alertas)"
+        ]
+      ],
+      [
+        "Capacidad para actuar",
+        [
+          "¿El personal de Almacén puede revisar las existencias y explicar las diferencias que encuentra? (Verificación práctica)",
+          "¿Quienes usan el monitor entienden cuánto material tenemos, para cuánto alcanza y cuándo debemos comprar? (Ejemplo práctico)",
+          "¿Cuando un dato no coincide o genera dudas, sabemos cómo revisarlo y con quién aclararlo antes de decidir? (Caso práctico o incidencia real)"
+        ]
+      ]
+    ]
+  ],
+  [
+    "Sostenibilidad",
+    [
+      [
+        "Continuidad de la práctica",
+        [
+          "¿Hay otra persona preparada para actualizar y compartir el monitor cuando falta el responsable habitual? (Prueba o sustitución real)",
+          "¿El equipo cuenta con instrucciones claras y fáciles de seguir para actualizar el inventario, revisar faltantes y preparar el monitor? (Guía vigente)",
+          "¿Seguimos entregando el monitor completo y a tiempo cuando hay ausencias, cambios de turno o mucho trabajo? (Historial de entregas)"
+        ]
+      ],
+      [
+        "Aprendizaje y mejora",
+        [
+          "¿Cuando aparece una diferencia de inventario o un faltante inesperado, revisamos qué pasó y por qué? (Casos analizados)",
+          "¿Cuando un problema se repite, definimos qué vamos a hacer, quién lo hará y para cuándo? (Plan de acciones)",
+          "¿Comprobamos que las mejoras ayudan a reducir las diferencias de inventario, los faltantes y las compras urgentes? (Comparación entre periodos)"
+        ]
+      ]
+    ]
+  ]
+];
 const CATALOG_KEY="oleolab_assessment_catalog_v1";
 function validCatalog(c){
  if(!Array.isArray(c)||c.length!==4)return false;
@@ -111,5 +203,5 @@ function validCatalog(c){
  return c.every(p=>p[1].every(e=>Array.isArray(e)&&typeof e[0]==="string"&&e[0].trim().length>0&&e[0].length<=120&&Array.isArray(e[1])&&e[1].length>=1&&e[1].length<=25&&e[1].every(q=>typeof q==="string"&&q.trim().length>=5&&q.length<=700)));
 }
 function normalizeCatalog(c){return validCatalog(c)?JSON.parse(JSON.stringify(c)):JSON.parse(JSON.stringify(DEFAULT_CATALOG))}
-function isPreviousDefault(c){return JSON.stringify(c)===JSON.stringify(PREVIOUS_DEFAULT_CATALOG)}
+function isPreviousDefault(c){const json=JSON.stringify(c);return json===JSON.stringify(PREVIOUS_DEFAULT_CATALOG)||json===JSON.stringify(DEFAULT_CATALOG_24)}
 function upgradeUntouchedDefault(c){return isPreviousDefault(c)?JSON.parse(JSON.stringify(DEFAULT_CATALOG)):c}
