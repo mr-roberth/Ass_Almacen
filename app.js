@@ -1,12 +1,20 @@
-const DATA=[
+const LEGACY_DATA=[
 ["Confiabilidad",[["Integridad de datos",["El Forecast incluye todos los SKU/PT requeridos","Cantidades completas para los periodos evaluados","Fechas o semanas de necesidad definidas","Inventario, llegadas y necesidades disponibles"]],["Exactitud y consistencia",["Forecast coincide con la fuente oficial","Sin duplicidades, omisiones ni inconsistencias relevantes","Unidades de medida correctas y homogéneas","Los datos coinciden con la realidad operativa"]],["Oportunidad y actualización",["Forecast actualizado según frecuencia establecida","Inventarios y llegadas registrados oportunamente","Cambios reflejados en la App sin retrasos relevantes","Las áreas usan información vigente"]],["Trazabilidad y validación",["Se identifica quién actualizó la información","Se registra fecha de cada actualización","La información es revisada antes de usarse","Correcciones y ajustes documentados"]]]],
 ["Comunicación",[["Flujo entre áreas",["Planeación, Compras, Producción y Almacén intercambian datos oportunamente","Las áreas conocen cambios que les impactan","Hay un canal definido de incidencias","La información compartida es clara para actuar"]],["Gestión de cambios",["Los cambios al Forecast se comunican formalmente","Se evalúa el impacto sobre inventarios, compras y producción","Se notifica a todos los responsables afectados","Está identificada la versión vigente del Forecast"]],["Seguimiento de acuerdos",["Revisiones generan acuerdos claros","Cada acuerdo tiene un responsable","Cada acuerdo tiene fecha compromiso","Se verifica el cierre de los acuerdos"]],["Escalamiento de riesgos",["Riesgos identificados antes del incumplimiento","Hay mecanismos claros para escalar problemas","Las decisiones se toman oportunamente","Riesgos críticos visibles para los responsables"]]]],
 ["Disciplina operativa",[["Claridad de roles",["Cada actividad tiene un responsable asignado","Los usuarios conocen su rol","Se define quién captura y quién valida","No existen vacíos de responsabilidad"]],["Cumplimiento de rutinas",["Forecast actualizado en fechas acordadas","Inventarios, llegadas y necesidades revisados periódicamente","Reuniones o cortes de seguimiento consistentes","La práctica continúa sin supervisión directa"]],["Competencia y capacitación",["Usuarios clave capacitados","Los usuarios interpretan correctamente la App","Saben actuar ante desviaciones y alertas","Existen guías o materiales de apoyo"]],["Responsabilidad y seguimiento",["Desviaciones atendidas oportunamente","Compromisos cumplidos a tiempo","Responsables cuidan la calidad de sus datos","Incumplimientos reconocidos y gestionados"]]]],
 ["Sostenibilidad",[["Medición de desempeño",["Hay indicadores de cumplimiento Forecast","Se mide cumplimiento por periodo","Se monitorean las desviaciones relevantes","Los resultados se revisan periódicamente"]],["Análisis de desviaciones",["Los incumplimientos tienen análisis de causa","Se distinguen causas humanas, operativas y tecnológicas","Se identifican desviaciones recurrentes","Se documentan los hallazgos"]],["Acciones correctivas",["Las desviaciones generan acciones concretas","Acciones tienen responsable y fecha","Se comprueba efectividad de las acciones","Se evita repetir problemas sin tratamiento"]],["Continuidad operativa",["La práctica no depende de una sola persona","Existen suplentes capacitados","El proceso cuenta con documentación mínima","Se mantiene ante cambios de personal o carga"]]]]
 ];
 
-const ITEMS=DATA.flatMap(([pillar,els],p)=>els.flatMap(([element,criteria],e)=>criteria.map((criterion,c)=>({id:p+"-"+e+"-"+c,pillar,element,criterion,p,e,c}))));
-const STEPS=DATA.flatMap(([pillar,els],p)=>els.map(([name],e)=>({pillar,name,p,e})));
+let catalogTemplate=normalizeCatalog(getSaved(CATALOG_KEY,DEFAULT_CATALOG));
+let editingCatalog=JSON.parse(JSON.stringify(catalogTemplate));
+let DATA=JSON.parse(JSON.stringify(catalogTemplate)),ITEMS=[],STEPS=[];
+function catalogFor(ev){return ev&&validCatalog(ev.catalog)?ev.catalog:LEGACY_DATA}
+function itemsOf(c){return c.flatMap(([pillar,els],p)=>els.flatMap(([element,criteria],e)=>criteria.map((criterion,k)=>({id:p+"-"+e+"-"+k,pillar,element,criterion,p,e,c:k}))))}
+function stepsOf(c){return c.flatMap(([pillar,els],p)=>els.map(([name],e)=>({pillar,name,p,e})))}
+function itemsFor(ev){return itemsOf(catalogFor(ev))}
+function stepsFor(ev){return stepsOf(catalogFor(ev))}
+function activateCatalog(ev){DATA=catalogFor(ev);ITEMS=itemsOf(DATA);STEPS=stepsOf(DATA);step=Math.min(step,Math.max(0,STEPS.length-1))}
+
 const URL_DEFAULT="https://script.google.com/macros/s/AKfycbySBlGPjgi5f8b4pOKwEvaCKBfmjgsi16Hsnj4DM3hE11Iqc5fTyjZNfEjA5lpxJ-CT/exec";
 const LOGO_URL="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png";
 const KEY="oleolab_forecast_assessments_v1",DRAFTKEY="oleolab_assessment_draft_v2",URLKEY="oleolab_assessment_gas_url";
@@ -15,13 +23,15 @@ const clone=a=>JSON.parse(JSON.stringify(a));
 const escapeHTML=x=>String(x??"").replace(/[&<>"']/g,v=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[v]));
 function getSaved(k,otherwise){try{return JSON.parse(localStorage.getItem(k))??otherwise}catch(e){return otherwise}}
 let store=getSaved(KEY,[]).filter(x=>x&&x.id&&x.scores),current=getSaved(DRAFTKEY,null),step=0,radarChart=null,barsChart=null;
-if(!current||!current.scores)current=store[0]?clone(store[0]):blank();
-function blank(){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area:"Almacén",owner:"",forecast:"",representative:"",scores:{},created:n.toISOString()}}
+if(!current||!current.scores)current=blank();
+else if(!validCatalog(current.catalog)&&!Object.values(current.scores).some(x=>x&&x.value!==undefined))current=blank();
+activateCatalog(current);
+function blank(){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area:"Almacén",owner:"",forecast:"",representative:"",scores:{},catalog:clone(catalogTemplate),created:n.toISOString()}}
 function rating(x){return [0,1,2].includes(Number(x))&&x!==undefined&&x!==null?Number(x):null}
 function pct(n){return n==null?"—":Math.round(n)+"%"}
 function level(n){return n==null?"Sin evaluar":n<=25?"Inicial":n<=50?"Básico":n<=75?"Estandarizado":n<=90?"Controlado":"Sostenible"}
-function rowScore(ev,predicate){let vs=ITEMS.filter(predicate).map(i=>rating(ev.scores?.[i.id]?.value)).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length*50:null}
-function totalAnswered(ev){return ITEMS.filter(i=>rating(ev.scores?.[i.id]?.value)!==null).length}
+function rowScore(ev,predicate){let vs=itemsFor(ev).filter(predicate).map(i=>rating(ev.scores?.[i.id]?.value)).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length*50:null}
+function totalAnswered(ev){return itemsFor(ev).filter(i=>rating(ev.scores?.[i.id]?.value)!==null).length}
 function labelScore(v){return v===2?"Cumple":v===1?"Parcial":v===0?"No cumple":"Sin evaluar"}
 function classScore(v){return v===2?"yes":v===1?"partial":v===0?"no":"na"}
 function dateLabel(s){try{return new Date(s+"T12:00:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"})}catch(e){return s||""}}
@@ -29,7 +39,7 @@ function localDraft(){try{localStorage.setItem(DRAFTKEY,JSON.stringify(current))
 function status(msg,bad=false){el("status").textContent=msg;el("status").classList.toggle("error",bad)}
 function currentFields(){localDraft()}
 function reflectFields(){}
-function showPage(which){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+which));if(which==="evaluaciones")renderHistory();if(which==="dashboard")renderDashboard()}
+function showPage(which){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+which));if(which==="nueva")renderStep();if(which==="evaluaciones")renderHistory();if(which==="dashboard")renderDashboard();if(which==="criterios")renderEditor()}
 function renderStepNav(){
  const html=STEPS.map((s,i)=>{const filtered=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);const count=filtered.filter(x=>rating(current.scores[x.id]?.value)!==null).length;
  return '<button class="step-btn '+(i===step?"active ":"")+(count===filtered.length?"complete":"")+'" data-step="'+i+'" title="'+escapeHTML(s.pillar+" · "+s.name)+'"><span class="num">'+(i+1)+'</span><span>'+escapeHTML(s.name)+'<br><small class="subtle">'+count+'/'+filtered.length+' evaluados</small></span></button>'}).join("");
@@ -39,11 +49,12 @@ function renderStepNav(){
  el("progress-global").textContent=pct(rowScore(current,()=>true));
 }
 function renderStep(){
+ activateCatalog(current);
  const s=STEPS[step];el("step-pillar").textContent=s.pillar;el("step-title").textContent=s.name;
  el("step-count").textContent="Elemento "+(step+1)+" de "+STEPS.length;
  const found=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);
  el("step-questions").innerHTML=found.map((item,i)=>{const ans=current.scores[item.id]||{},v=rating(ans.value);const more=ans.evidence||ans.notes||ans.action;
- return '<article class="criterion"><div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(item.criterion)+'</span></div><div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Evidencia y observaciones (opcional)</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Documento o registro" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
+ return '<article class="criterion"><div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(item.criterion)+'</span></div><div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Registrar evidencia y observaciones</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Fuente, fecha, muestra o porcentaje observado" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
  el("prev-step").disabled=step===0;el("next-step").innerHTML=step===STEPS.length-1?'Ir a resultados <i class="fa-solid fa-chart-pie"></i>':'Siguiente elemento <i class="fa-solid fa-arrow-right"></i>';
  renderStepNav();
 }
@@ -54,6 +65,7 @@ function setChoice(button){
 }
 function saveLocal(){
  currentFields();
+ if(!validCatalog(current.catalog)&&current.catalog)throw Error("Los criterios de esta evaluación no son válidos");
  const pos=store.findIndex(x=>x.id===current.id);
  const data=clone(current);data.modified=new Date().toISOString();
  if(pos>=0)store[pos]=data;else store.unshift(data);
@@ -87,7 +99,7 @@ function removeEval(id){if(!confirm("¿Eliminar esta evaluación del almacenamie
 function renderHistory(){
  const q=el("search-evals").value.toLowerCase().trim(),arr=store.filter(x=>!q||[x.period,x.date].join(" ").toLowerCase().includes(q));
  el("hist-count").textContent=store.length+" evaluaciones guardadas en este navegador";
- el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||("Evaluación "+dateLabel(x.date)))+'</strong></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+totalAnswered(x)+' / '+ITEMS.length+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
+ el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||("Evaluación "+dateLabel(x.date)))+'</strong></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+totalAnswered(x)+' / '+itemsFor(x).length+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
  syncDashboardSelector();
 }
 function syncDashboardSelector(){
@@ -97,7 +109,7 @@ function syncDashboardSelector(){
  if(!sel.value&&store.length)sel.value=store[0].id;
 }
 function dashboardEvaluation(){return store.find(x=>x.id===el("dashboard-select").value)||current}
-function summary(ev){const answered=totalAnswered(ev),overall=rowScore(ev,()=>true);return {answered,overall,pillars:DATA.map((d,p)=>rowScore(ev,x=>x.p===p)),elements:STEPS.map(s=>rowScore(ev,x=>x.p===s.p&&x.e===s.e))}}
+function summary(ev){const active=catalogFor(ev),steps=stepsFor(ev);const answered=totalAnswered(ev),overall=rowScore(ev,()=>true);return {answered,overall,pillars:active.map((d,p)=>rowScore(ev,x=>x.p===p)),elements:steps.map(s=>rowScore(ev,x=>x.p===s.p&&x.e===s.e))}}
 function makeCharts(ev){
  const d=summary(ev);
  if(typeof Chart==="undefined"){el("graph-alert").textContent="No se cargó Chart.js. Verifica la conexión a Internet.";return}
@@ -109,7 +121,7 @@ function makeCharts(ev){
 }
 function renderDashboard(){
  syncDashboardSelector();
- const ev=dashboardEvaluation(),d=summary(ev);
+ const ev=dashboardEvaluation();activateCatalog(ev);const d=summary(ev);
  el("kpi-global").textContent=pct(d.overall);
  el("kpi-level").textContent=level(d.overall);
  el("kpi-answered").textContent=d.answered+"/"+ITEMS.length;
@@ -129,11 +141,11 @@ function downloadContent(filename,type,data){
 function exportCSV(){
  const all=store.some(x=>x.id===current.id)?store:store.concat(current);
  const rows=[["ID","Evaluación","Fecha","Pilar","Elemento","Criterio","Resultado","Puntaje","Evidencia","Observaciones","Acción"]];
- all.forEach(ev=>ITEMS.forEach(x=>{const o=ev.scores?.[x.id]||{},v=rating(o.value);rows.push([ev.id,ev.period,ev.date,x.pillar,x.element,x.criterion,labelScore(v),v??"",o.evidence||"",o.notes||"",o.action||""])}));
+ all.forEach(ev=>itemsFor(ev).forEach(x=>{const o=ev.scores?.[x.id]||{},v=rating(o.value);rows.push([ev.id,ev.period,ev.date,x.pillar,x.element,x.criterion,labelScore(v),v??"",o.evidence||"",o.notes||"",o.action||""])}));
  const content=rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
  downloadContent("oleolab_assessment_datos.csv","text/csv;charset=utf-8","\uFEFF"+content);
 }
-function exportJSON(){downloadContent("oleolab_assessment_respaldo.json","application/json",JSON.stringify(store,null,2))}
+function exportJSON(){downloadContent("oleolab_assessment_respaldo.json","application/json",JSON.stringify({version:2,catalog:catalogTemplate,assessments:store},null,2))}
 function downloadWhiteCanvas(canvas,name){
  if(!canvas)return;
  const target=document.createElement("canvas");target.width=canvas.width;target.height=canvas.height;
@@ -145,7 +157,7 @@ async function loadLogoData(){
  try{const img=new Image();img.crossOrigin="anonymous";img.src=LOGO_URL;await img.decode();const cn=document.createElement("canvas");cn.width=img.naturalWidth;cn.height=img.naturalHeight;cn.getContext("2d").drawImage(img,0,0);return cn.toDataURL("image/png")}catch(e){return null}
 }
 async function generatePDF(){
- const ev=dashboardEvaluation(),d=summary(ev);
+ const ev=dashboardEvaluation();activateCatalog(ev);const d=summary(ev);
  if(!window.jspdf||!window.jspdf.jsPDF){alert("No está disponible la librería PDF. Revisa tu conexión.");return}
  const pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4"});
  const W=210,H=297,margin=14;
@@ -189,7 +201,18 @@ async function generatePDF(){
 }
 async function importJSON(file){
  if(!file)return;
- try{const content=JSON.parse(await file.text());if(!Array.isArray(content)||!content.every(x=>x.id&&x.scores&&typeof x.scores==="object"))throw Error("El archivo no es un respaldo válido.");const map=new Map(store.map(x=>[x.id,x]));content.forEach(x=>map.set(x.id,x));store=[...map.values()];localStorage.setItem(KEY,JSON.stringify(store));renderHistory();status("Respaldo importado. "+content.length+" evaluaciones procesadas.")}catch(e){status("Error al importar: "+e.message,true)}
+ try{
+  const raw=JSON.parse(await file.text()),list=Array.isArray(raw)?raw:raw.assessments;
+  if(!Array.isArray(list)||!list.every(x=>x&&x.id&&x.scores&&typeof x.scores==="object"))throw Error("El archivo no es un respaldo válido.");
+  if(!Array.isArray(raw)&&raw.catalog!==undefined){
+   if(!validCatalog(raw.catalog))throw Error("Catálogo de preguntas inválido.");
+   catalogTemplate=normalizeCatalog(raw.catalog);editingCatalog=clone(catalogTemplate);
+   localStorage.setItem(CATALOG_KEY,JSON.stringify(catalogTemplate));
+  }
+  const map=new Map(store.map(x=>[x.id,x]));list.forEach(x=>map.set(x.id,x));store=[...map.values()];
+  localStorage.setItem(KEY,JSON.stringify(store));renderHistory();
+  status("Respaldo importado. "+list.length+" evaluaciones procesadas; las anteriores mantienen sus preguntas.");
+ }catch(e){status("Error al importar: "+e.message,true)}
 }
 async function fetchCloud(){
  const url=localStorage.getItem(URLKEY)||URL_DEFAULT;
@@ -198,6 +221,7 @@ async function fetchCloud(){
  store=[...map.values()];localStorage.setItem(KEY,JSON.stringify(store));renderHistory();status("Recuperación desde Sheets confirmada: "+data.assessments.length+" registros")}catch(err){status("No se pudo recuperar directamente del GAS ("+err.message+"). Si es un bloqueo CORS, los registros locales están a salvo.",true)}
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.tab)));
+
 
 el("step-nav").addEventListener("click",e=>{const b=e.target.closest("[data-step]");if(b){step=Number(b.dataset.step);renderStep()}});
 el("step-questions").addEventListener("click",e=>{const b=e.target.closest("[data-criterion]");if(b)setChoice(b)});
