@@ -5,7 +5,7 @@ const LEGACY_DATA=[
 ["Sostenibilidad",[["Medición de desempeño",["Hay indicadores de cumplimiento Forecast","Se mide cumplimiento por periodo","Se monitorean las desviaciones relevantes","Los resultados se revisan periódicamente"]],["Análisis de desviaciones",["Los incumplimientos tienen análisis de causa","Se distinguen causas humanas, operativas y tecnológicas","Se identifican desviaciones recurrentes","Se documentan los hallazgos"]],["Acciones correctivas",["Las desviaciones generan acciones concretas","Acciones tienen responsable y fecha","Se comprueba efectividad de las acciones","Se evita repetir problemas sin tratamiento"]],["Continuidad operativa",["La práctica no depende de una sola persona","Existen suplentes capacitados","El proceso cuenta con documentación mínima","Se mantiene ante cambios de personal o carga"]]]]
 ];
 
-let catalogTemplate=normalizeCatalog(getSaved(CATALOG_KEY,DEFAULT_CATALOG));
+let catalogTemplate=normalizeCatalog(upgradeUntouchedDefault(getSaved(CATALOG_KEY,DEFAULT_CATALOG)));
 let editingCatalog=JSON.parse(JSON.stringify(catalogTemplate));
 let DATA=JSON.parse(JSON.stringify(catalogTemplate)),ITEMS=[],STEPS=[];
 function catalogFor(ev){return ev&&validCatalog(ev.catalog)?ev.catalog:LEGACY_DATA}
@@ -25,6 +25,11 @@ function getSaved(k,otherwise){try{return JSON.parse(localStorage.getItem(k))??o
 let store=getSaved(KEY,[]).filter(x=>x&&x.id&&x.scores),current=getSaved(DRAFTKEY,null),step=0,radarChart=null,barsChart=null;
 if(!current||!current.scores)current=blank();
 else if(!validCatalog(current.catalog)&&!Object.values(current.scores).some(x=>x&&x.value!==undefined))current=blank();
+// Actualiza únicamente un borrador sin respuestas ni observaciones que use
+// exactamente la versión anterior de las preguntas de fábrica.
+else if(isPreviousDefault(current.catalog)&&!Object.values(current.scores).some(x=>x&&(x.value!==undefined||x.notes||x.action||x.evidence))){
+ current.catalog=clone(catalogTemplate);localStorage.setItem(DRAFTKEY,JSON.stringify(current));
+}
 activateCatalog(current);
 function blank(){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area:"Almacén",owner:"",forecast:"",representative:"",scores:{},catalog:clone(catalogTemplate),created:n.toISOString()}}
 function rating(x){return [0,1,2].includes(Number(x))&&x!==undefined&&x!==null?Number(x):null}
