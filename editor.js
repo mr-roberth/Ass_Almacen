@@ -42,7 +42,7 @@ function persistCatalog(){
  catalogDirty=false;
  const notes=Object.values(current.scores||{}).some(x=>x&&(x.value!==undefined||x.notes||x.action||x.evidence));
  if(!notes&&(current.area||"Almacén")===editorArea&&validCatalog(current.catalog,editorArea)){
-   current.catalog=clone(catalogTemplate);
+   current.catalog=clone(templateFor(editorArea));
    step=0;activateCatalog(current);localDraft();
  }
  renderEditor();
