@@ -58,9 +58,9 @@ function renderStepNav(){
  const answered=totalAnswered(current);el("progress-label").textContent=answered+" de "+ITEMS.length+" criterios evaluados";
  el("progress-fill").style.width=(answered/ITEMS.length*100)+"%";
  el("progress-global").textContent=pct(rowScore(current,()=>true));
- const older=JSON.stringify(current.catalog)!==JSON.stringify(catalogTemplate);
+ const older=JSON.stringify(current.catalog)!==JSON.stringify(templateFor(current.area||"Almacén"));
  el("catalog-version-note").hidden=!older;
- el("catalog-version-note").textContent=older?"Esta evaluación conserva su cuestionario original ("+ITEMS.length+" preguntas). Para usar las "+itemsOf(catalogTemplate).length+" actuales, pulsa Nueva evaluación.":"";
+ el("catalog-version-note").textContent=older?"Esta evaluación usa su cuestionario original ("+ITEMS.length+" preguntas). Para usar las "+itemsOf(templateFor(current.area||"Almacén")).length+" actuales, pulsa Nueva evaluación.":"";
 }
 function renderStep(){
  activateCatalog(current);
@@ -202,7 +202,7 @@ function exportCSV(){
  const content=rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
  downloadContent("oleolab_assessment_datos.csv","text/csv;charset=utf-8","\uFEFF"+content);
 }
-function exportJSON(){downloadContent("oleolab_assessment_respaldo.json","application/json",JSON.stringify({version:2,catalog:catalogTemplate,assessments:store},null,2))}
+function exportJSON(){downloadContent("oleolab_assessment_respaldo.json","application/json",JSON.stringify({version:3,catalog:templateFor("Almacén"),catalogs:Object.fromEntries(["Almacén","Producción","Mantenimiento"].map(a=>[a,templateFor(a)])),assessments:store},null,2))}
 function downloadWhiteCanvas(canvas,name){
  if(!canvas)return;
  const target=document.createElement("canvas");target.width=canvas.width;target.height=canvas.height;
@@ -261,9 +261,19 @@ async function importJSON(file){
  try{
   const raw=JSON.parse(await file.text()),list=Array.isArray(raw)?raw:raw.assessments;
   if(!Array.isArray(list)||!list.every(x=>x&&x.id&&x.scores&&typeof x.scores==="object"))throw Error("El archivo no es un respaldo válido.");
-  if(!Array.isArray(raw)&&raw.catalog!==undefined){
-   if(!validCatalog(raw.catalog))throw Error("Catálogo de preguntas inválido.");
-   catalogTemplate=normalizeCatalog(raw.catalog);editingCatalog=clone(catalogTemplate);
+  if(!Array.isArray(raw)&&raw.catalogs&&typeof raw.catalogs==="object"){
+   for(const area of ["Almacén","Producción","Mantenimiento"]){
+    if(raw.catalogs[area]===undefined)continue;
+    if(!validCatalog(raw.catalogs[area],area))throw Error("Catálogo inválido: "+area);
+    catalogByArea[area]=clone(raw.catalogs[area]);
+    localStorage.setItem(catalogStorageKey(area),JSON.stringify(catalogByArea[area]));
+   }
+   catalogTemplate=catalogByArea["Almacén"];editingCatalog=clone(templateFor(editorArea));
+  }else if(!Array.isArray(raw)&&raw.catalog!==undefined){
+   if(!validCatalog(raw.catalog,"Almacén"))throw Error("Catálogo de Almacén inválido.");
+   catalogByArea["Almacén"]=clone(raw.catalog);
+   catalogTemplate=catalogByArea["Almacén"];
+   if(editorArea==="Almacén")editingCatalog=clone(catalogTemplate);
    localStorage.setItem(CATALOG_KEY,JSON.stringify(catalogTemplate));
   }
   const map=new Map(store.map(x=>[x.id,x]));list.forEach(x=>map.set(x.id,x));store=[...map.values()];
