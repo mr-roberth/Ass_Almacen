@@ -10,9 +10,28 @@ Herramienta de evaluación por áreas de Grupo Oleolab, con captura guiada, resu
 |---|---:|---:|---:|---|
 | **Almacén** | 4 | 8 | 29 | [Assessment y Dashboard Monitor de Insumos Críticos](https://docs.google.com/spreadsheets/d/1yGLqGgycMCsg8wpoVaYLzkgkw-bh6KHBZCZFGKlo0lA/edit), hoja CRITERIOS |
 | **Producción** | 2 | 9 | 80 | Archivo proporcionado **27.03.2026 Assessment Gestión Operativa**, hoja Assessment |
-| **Mantenimiento** | 2 | 9 | 80 | El mismo cuestionario de Gestión Operativa |
+| **Mantenimiento** | 4 | 28 | 29 | Cuestionario específico enviado el 12/10/2026, con evaluación 0/1 proporcionada |
 
-Los pilares originales para Producción y Mantenimiento son **Estabilidad** y **Mejora de procesos**. Los nueve elementos son **Estructura de equipos**, **Trabajo estandarizado**, **5S**, **Indicadores**, **Solución de problemas**, **Escalonamiento e interacciones**, **Gestión visual**, **Mejora continua** y **Cultura y liderazgo**. Se mantienen los 80 textos de origen, incluidos términos técnicos, en el catálogo oficial.
+Los pilares originales para **Producción** son **Estabilidad** y **Mejora de procesos**. Sus nueve elementos son **Estructura de equipos**, **Trabajo estandarizado**, **5S**, **Indicadores**, **Solución de problemas**, **Escalonamiento e interacciones**, **Gestión visual**, **Mejora continua** y **Cultura y liderazgo**. Se mantienen los 80 textos de Producción, incluidos términos técnicos, en su catálogo oficial.
+
+
+## Mantenimiento: criterios correctos y diagnóstico recibido (12/10/2026)
+
+Se sustituyó el catálogo predeterminado de 80 criterios genéricos de Mantenimiento por los **29 criterios correctos** proporcionados por el usuario, distribuidos en cuatro pilares:
+
+| Pilar | Elementos | Criterios |
+|---|---:|---:|
+| Administración de materiales, activos e inversiones | 6 | 7 |
+| Ejecución del mantenimiento | 12 | 12 |
+| Ingeniería del mantenimiento | 6 | 6 |
+| Costo del mantenimiento | 4 | 4 |
+| **Total** | **28** | **29** |
+
+La evaluación original proporcionada usó **0 y 1** en la última columna, interpretados como resultado binario: **0 = No cumple; 1 = Cumple**. Al importar al sistema de tres calificaciones, 0 pasa a 0 y **1 pasa a 2 (Cumple)**; no se inventan respuestas Parcial. Resultado original: **7 Cumple, 22 No cumple, 0 Parcial**, puntuación **24.1 %**, **Nivel 1 de 5 (Inicial)**. Las respuestas no incluyen observaciones ni evidencias verificadas. El número **1** que aparece en la segunda columna de la tabla original no se usa como ponderador en la fórmula; cada criterio tiene el mismo peso.
+
+La App incorpora el diagnóstico con identificador `mant_diagnostico_20261012`, en **Historial** y **Resultados**, y ofrece un botón **Ver diagnóstico inicial de Mantenimiento** al seleccionar esa área. Se copia al almacenamiento local del navegador una sola vez; **no se envía automáticamente a GAS**, para evitar escrituras no solicitadas. Para sincronizarlo a GAS, ábrelo desde Historial y pulsa **Guardar y sincronizar**. La fecha de aplicación del assessment no fue proporcionada, por lo que no se atribuye una fecha de evaluación.
+
+Para evitar 28 pantallas de una sola pregunta, el cuestionario actualizado de Mantenimiento se contesta en **4 pasos (uno por pilar)**, manteniendo los 28 elementos para los gráficos y resultados. El PDF incluye una tabla legible de los 28 elementos con conteos de **Cumple, Parcial y No cumple**. Las evaluaciones históricas anteriores de Mantenimiento con 80 preguntas conservan su estructura y puntuación.
 
 ### Calificación y madurez
 
@@ -27,7 +46,7 @@ Los pilares originales para Producción y Mantenimiento son **Estabilidad** y **
 
 ### Gráficos, descargas y editor
 
-El Dashboard muestra la madurez por pilar y las barras horizontales apiladas por elemento con **número de criterios que Cumplen, Cumplen parcialmente y No cumplen**, diferenciados por color, junto con su leyenda y cifras en cada barra cuando hay espacio. Producción y Mantenimiento utilizan un gráfico de dos pilares en lugar de radar, para evitar un radar poco informativo; Almacén conserva el radar de cuatro pilares. Se mantienen descargas PNG, PDF y CSV.
+El Dashboard muestra la madurez por pilar y las barras horizontales apiladas por elemento con **número de criterios que Cumplen, Cumplen parcialmente y No cumplen**, diferenciados por color, junto con su leyenda y cifras en cada barra cuando hay espacio. Producción utiliza un gráfico horizontal de dos pilares; Almacén y el nuevo Mantenimiento muestran radar de cuatro pilares. Se mantienen descargas PNG, PDF y CSV.
 
 La pestaña **Preguntas** permite elegir área, modificar texto y evidencias, agregar/eliminar preguntas o elementos, restaurar el catálogo oficial correspondiente y exportar/importar JSON. El catálogo se guarda por área y por dispositivo, **no se sincroniza entre dispositivos**. Cada evaluación contiene su propia copia de criterios para que cambios posteriores no alteren la evaluación histórica (incluidos cuestionarios de 24 y 64 criterios de versiones previas).
 
