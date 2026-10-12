@@ -272,6 +272,26 @@ async function generatePDF(){
  pdf.text("Madurez: "+level(d.overall)+" · Resultado basado solo en respuestas registradas.",margin,250);
  pdf.text("Informe generado: "+new Date().toLocaleString("es-MX"),margin,258);
  const hasAutoTable=typeof pdf.autoTable==="function";
+ if(groupedMaintenance(ev)){
+   pdf.addPage();pdf.setFillColor(23,79,60);pdf.rect(0,0,W,23,"F");
+   pdf.setTextColor(255,255,255);pdf.setFontSize(12);pdf.setFont("helvetica","bold");
+   pdf.text("MANTENIMIENTO · CUMPLIMIENTO POR ELEMENTO",margin,14);
+   const table=STEPS.map(st=>{
+     const entries=ITEMS.filter(x=>x.p===st.p&&x.e===st.e),scores=entries.map(x=>rating(ev.scores?.[x.id]?.value));
+     return [st.pillar,st.name,scores.filter(x=>x===2).length,scores.filter(x=>x===1).length,scores.filter(x=>x===0).length];
+   });
+   if(hasAutoTable){
+     pdf.autoTable({startY:29,head:[["PILAR","ELEMENTO","CUMPLE","PARCIAL","NO CUMPLE"]],body:table,
+      theme:"grid",margin:{left:margin,right:margin,top:17,bottom:17},
+      headStyles:{fillColor:[40,111,79],fontSize:8},
+      styles:{fontSize:7.3,cellPadding:2.2,overflow:"linebreak",valign:"top",textColor:[36,58,46]},
+      columnStyles:{0:{cellWidth:40},1:{cellWidth:75},2:{cellWidth:18},3:{cellWidth:18},4:{cellWidth:31}}});
+   }else{
+     let y=30;table.forEach(row=>{const lines=pdf.splitTextToSize(row.join(" · "),182);
+       if(y+lines.length*4.1>276){pdf.addPage();y=24}
+       pdf.setTextColor(38,62,44);pdf.setFontSize(8);pdf.text(lines,margin,y);y+=lines.length*4.1+3;});
+   }
+ }
  for(let p=0;p<DATA.length;p++){
   const [pillar,els]=DATA[p];pdf.addPage();pdf.setFillColor(23,79,60);pdf.rect(0,0,W,21,"F");pdf.setTextColor(255,255,255);pdf.setFontSize(12);pdf.setFont("helvetica","bold");pdf.text("PILAR "+(p+1)+" · "+pillar.toUpperCase(),margin,13);
   pdf.setTextColor(39,79,54);pdf.setFontSize(10);pdf.text("Madurez: "+pct(d.pillars[p])+" | Evaluación: "+(ev.period||"Sin periodo"),margin,30);
