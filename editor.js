@@ -28,7 +28,7 @@ function renderEditor(){
      }).join("")+
      '<button type="button" class="btn add-criterion" data-action="add-question" data-p="'+p+'" data-e="'+e+'" '+(questions.length>=25?"disabled":"")+'><i class="fa-solid fa-plus"></i> Agregar pregunta a este elemento</button></div>'
    ).join("")+
-   '<button type="button" class="btn add-element" data-action="add-element" data-p="'+p+'" '+(elements.length>=12?"disabled":"")+'><i class="fa-solid fa-plus"></i> Agregar elemento a '+escapeHTML(pillar)+'</button></div></details>';
+   '<button type="button" class="btn add-element" data-action="add-element" data-p="'+p+'" '+(elements.length>=25?"disabled":"")+'><i class="fa-solid fa-plus"></i> Agregar elemento a '+escapeHTML(pillar)+'</button></div></details>';
  }).join("");
  catalogStatus();
 }
@@ -76,7 +76,7 @@ el("catalog-editor").addEventListener("click",e=>{
  if(!editingCatalog[p])return;
  catalogOpenPillar=p;
  const els=editingCatalog[p][1],element=els[eIndex];
- if(action==="add-element"&&els.length<12)els.push(["Nuevo elemento",["¿Qué necesitamos revisar para sostener esta práctica? (Registro de seguimiento)"]]);
+ if(action==="add-element"&&els.length<25)els.push(["Nuevo elemento",["¿Qué necesitamos revisar para sostener esta práctica? (Registro de seguimiento)"]]);
  if(action==="remove-element"&&els.length>1){
   if(!confirm("¿Eliminar este elemento y sus preguntas del catálogo para próximas evaluaciones?"))return;
   els.splice(eIndex,1);
