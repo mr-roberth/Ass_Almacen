@@ -33,19 +33,20 @@ function renderEditor(){
  catalogStatus();
 }
 function persistCatalog(){
- if(!validCatalog(editingCatalog)){status("Revisa que todos los elementos tengan nombre y que cada pregunta tenga al menos 5 caracteres.",true);return false}
+ if(!validCatalog(editingCatalog,editorArea)){status("Revisa que todos los elementos tengan nombre y que cada pregunta tenga al menos 5 caracteres.",true);return false}
  const next=clone(editingCatalog);
- try{localStorage.setItem(CATALOG_KEY,JSON.stringify(next))}
+ try{localStorage.setItem(catalogStorageKey(editorArea),JSON.stringify(next))}
  catch(e){status("No fue posible guardar las preguntas en este dispositivo.",true);return false}
- catalogTemplate=next;
+ catalogByArea[editorArea]=next;
+ if(editorArea==="Almacén")catalogTemplate=next;
  catalogDirty=false;
  const notes=Object.values(current.scores||{}).some(x=>x&&(x.value!==undefined||x.notes||x.action||x.evidence));
- if(!notes&&validCatalog(current.catalog)){
+ if(!notes&&(current.area||"Almacén")===editorArea&&validCatalog(current.catalog,editorArea)){
    current.catalog=clone(catalogTemplate);
    step=0;activateCatalog(current);localDraft();
  }
  renderEditor();
- status("Preguntas actualizadas en este dispositivo. Pulsa Nueva evaluación para usar la versión guardada.");
+ status("Preguntas de "+editorArea+" guardadas en este dispositivo. Las próximas evaluaciones usarán esta versión.");
  return true;
 }
 el("catalog-editor").addEventListener("toggle",e=>{
@@ -89,8 +90,8 @@ el("catalog-editor").addEventListener("click",e=>{
 });
 el("catalog-save").onclick=()=>persistCatalog();
 el("catalog-reset").onclick=()=>{
- if(!confirm("¿Restablecer las 29 preguntas oficiales? Esto no modifica las evaluaciones anteriores."))return;
- editingCatalog=clone(DEFAULT_CATALOG);catalogDirty=true;renderEditor();status("Cargadas las 29 preguntas oficiales. Pulsa Guardar cambios para aplicarlas.");
+ if(!confirm("¿Restablecer las preguntas oficiales de "+editorArea+"? Las evaluaciones anteriores conservarán sus versiones."))return;
+ editingCatalog=clone(areaCatalog(editorArea));catalogDirty=true;renderEditor();status("Restablecido el catálogo oficial de "+editorArea+". Pulsa Guardar cambios para aplicarlo.");
 };
 el("catalog-cancel").onclick=()=>{
  if(!catalogDirty)return;
@@ -98,15 +99,24 @@ el("catalog-cancel").onclick=()=>{
  editingCatalog=clone(catalogTemplate);catalogDirty=false;renderEditor();status("Se descartaron los cambios sin guardar.");
 };
 el("catalog-export").onclick=()=>{
- if(!validCatalog(editingCatalog)){status("Completa primero las preguntas para exportarlas.",true);return}
- downloadContent("oleolab_preguntas_assessment.json","application/json",JSON.stringify({type:"oleolab_assessment_catalog",version:2,catalog:editingCatalog},null,2));
+ if(!validCatalog(editingCatalog,editorArea)){status("Completa primero las preguntas para exportarlas.",true);return}
+ downloadContent("oleolab_preguntas_assessment.json","application/json",JSON.stringify({type:"oleolab_assessment_catalog",version:3,area:editorArea,catalog:editingCatalog},null,2));
 };
 el("catalog-import").onchange=async e=>{
  const file=e.target.files?.[0];if(!file)return;
  try{
   const raw=JSON.parse(await file.text()),cat=Array.isArray(raw)?raw:raw.catalog;
-  if(!validCatalog(cat))throw Error("El catálogo debe tener cuatro pilares y preguntas completas.");
+  if(!validCatalog(cat,editorArea))throw Error("Las preguntas deben coincidir con los pilares del área "+editorArea+".");
   editingCatalog=clone(cat);catalogDirty=true;renderEditor();status("Preguntas importadas. Pulsa Guardar cambios para aplicarlas.");
  }catch(err){status("No se pudieron importar las preguntas: "+err.message,true)}
  e.target.value="";
 };
+
+el("catalog-area").addEventListener("change",()=>{
+ const next=el("catalog-area").value;
+ if(!["Almacén","Producción","Mantenimiento"].includes(next))return;
+ if(next===editorArea)return;
+ if(catalogDirty&&!confirm("Tienes cambios de preguntas sin guardar. ¿Quieres descartarlos y cambiar de área?")){el("catalog-area").value=editorArea;return}
+ editorArea=next;editingCatalog=clone(templateFor(editorArea));catalogDirty=false;catalogOpenPillar=0;renderEditor();
+ status("Editando preguntas de "+editorArea+". Los cambios aquí no alteran evaluaciones anteriores.");
+});
