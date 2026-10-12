@@ -176,3 +176,10 @@ tr:hover td{background:#fafcfb}
  .editor-area-select{min-width:160px}
  .kpi strong{font-size:24px}
 }
+
+/* Cuestionario Mantenimiento 2026: agrupación por pilar y evaluación precargada */
+.maintenance-baseline-button{margin:0 0 16px;background:#e7f2ea;border-color:#72aa8b;color:#145039}
+.maintenance-baseline-button:hover{background:#d5e9dc}
+.criterion-element{font-size:11px;text-transform:uppercase;font-weight:800;letter-spacing:.045em;color:#287a56;border-bottom:1px solid #ebf0ec;padding-bottom:7px;margin-bottom:12px}
+.step-nav .step-btn{min-height:52px}
+@media (max-width:720px){.maintenance-baseline-button{width:100%;white-space:normal;text-align:center;line-height:1.3}}
