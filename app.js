@@ -10,13 +10,21 @@ const catalogByArea={"Almacén":catalogTemplate};
 function templateFor(area){const key=["Almacén","Producción","Mantenimiento"].includes(area)?area:"Almacén";if(!catalogByArea[key])catalogByArea[key]=normalizeCatalog(getSaved(catalogStorageKey(key),areaCatalog(key)),key);return catalogByArea[key]}
 let editorArea="Almacén";
 let editingCatalog=JSON.parse(JSON.stringify(catalogTemplate));
-let DATA=JSON.parse(JSON.stringify(catalogTemplate)),ITEMS=[],STEPS=[];
+let DATA=JSON.parse(JSON.stringify(catalogTemplate)),ITEMS=[],STEPS=[],NAV_STEPS=[];
 function catalogFor(ev){return ev&&validCatalog(ev.catalog)?ev.catalog:LEGACY_DATA}
 function itemsOf(c){return c.flatMap(([pillar,els],p)=>els.flatMap(([element,criteria],e)=>criteria.map((criterion,k)=>({id:p+"-"+e+"-"+k,pillar,element,criterion,p,e,c:k}))))}
 function stepsOf(c){return c.flatMap(([pillar,els],p)=>els.map(([name],e)=>({pillar,name,p,e})))}
 function itemsFor(ev){return itemsOf(catalogFor(ev))}
 function stepsFor(ev){return stepsOf(catalogFor(ev))}
-function activateCatalog(ev){DATA=catalogFor(ev);ITEMS=itemsOf(DATA);STEPS=stepsOf(DATA);step=Math.min(step,Math.max(0,STEPS.length-1))}
+function groupedMaintenance(ev){return (ev?.area==="Mantenimiento")&&DATA[0]?.[0]===MAINTENANCE_DEFAULT_CATALOG[0][0]}
+function stepCriteria(s){return ITEMS.filter(x=>x.p===s.p&&(s.e===null||x.e===s.e))}
+function activateCatalog(ev){
+ DATA=catalogFor(ev);ITEMS=itemsOf(DATA);STEPS=stepsOf(DATA);
+ // El nuevo mantenimiento tiene 28 elementos, muchos de una sola pregunta.
+ // Captura por sus 4 pilares; análisis y gráficos siguen por elemento.
+ NAV_STEPS=groupedMaintenance(ev)?DATA.map(([name],p)=>({pillar:name,name,p,e:null})):STEPS;
+ step=Math.min(step,Math.max(0,NAV_STEPS.length-1));
+}
 
 const URL_DEFAULT="https://script.google.com/macros/s/AKfycbySBlGPjgi5f8b4pOKwEvaCKBfmjgsi16Hsnj4DM3hE11Iqc5fTyjZNfEjA5lpxJ-CT/exec";
 const LOGO_URL="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png";
@@ -35,6 +43,28 @@ else if(isPreviousDefault(current.catalog)&&!Object.values(current.scores).some(
 }
 activateCatalog(current);
 function blank(area="Almacén"){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+area+" · "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area,owner:"",forecast:"",representative:"",scores:{},catalog:clone(templateFor(area)),created:n.toISOString()}}
+const MAINTENANCE_BASELINE_ID="mant_diagnostico_20261012";
+function addMaintenanceBaseline(){
+ if(store.some(ev=>ev.id===MAINTENANCE_BASELINE_ID))return false;
+ const assessment={
+  id:MAINTENANCE_BASELINE_ID,
+  period:"Diagnóstico inicial de Mantenimiento · datos proporcionados",
+  date:"",
+  area:"Mantenimiento",
+  owner:"",
+  forecast:"",
+  representative:"",
+  scores:clone(MAINTENANCE_BASELINE_SCORES),
+  catalog:clone(MAINTENANCE_DEFAULT_CATALOG),
+  source:"Respuestas de Mantenimiento proporcionadas el 12/10/2026",
+  originalScale:"0=No cumple; 1=Cumple",
+  conversion:"0 → 0; 1 → 2 (escala de la App)",
+  created:new Date().toISOString()
+ };
+ store.push(assessment);
+ try{localStorage.setItem(KEY,JSON.stringify(store));return true}
+ catch(e){store=store.filter(x=>x.id!==MAINTENANCE_BASELINE_ID);return false}
+}
 function rating(x){return [0,1,2].includes(Number(x))&&x!==undefined&&x!==null?Number(x):null}
 function pct(n){return n==null?"—":Math.round(n)+"%"}
 function levelIndex(n){return n==null?null:n<=25?1:n<=50?2:n<=75?3:n<=90?4:5}
@@ -52,7 +82,7 @@ function currentFields(){localDraft()}
 function reflectFields(){}
 function showPage(which){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+which));if(which==="nueva")renderStep();if(which==="evaluaciones")renderHistory();if(which==="dashboard")renderDashboard();if(which==="criterios"){el("catalog-area").value=editorArea;renderEditor()}}
 function renderStepNav(){
- const html=STEPS.map((s,i)=>{const filtered=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);const count=filtered.filter(x=>rating(current.scores[x.id]?.value)!==null).length;
+ const html=NAV_STEPS.map((s,i)=>{const filtered=stepCriteria(s);const count=filtered.filter(x=>rating(current.scores[x.id]?.value)!==null).length;
  return '<button class="step-btn '+(i===step?"active ":"")+(count===filtered.length?"complete":"")+'" data-step="'+i+'" title="'+escapeHTML(s.pillar+" · "+s.name)+'"><span class="num">'+(i+1)+'</span><span>'+escapeHTML(s.name)+'<br><small class="subtle">'+count+'/'+filtered.length+' evaluados</small></span></button>'}).join("");
  el("step-nav").innerHTML=html;
  const answered=totalAnswered(current);el("progress-label").textContent=answered+" de "+ITEMS.length+" criterios evaluados";
@@ -66,13 +96,14 @@ function renderStep(){
  activateCatalog(current);
  document.querySelectorAll("[data-area]").forEach(b=>{const selected=b.dataset.area===(current.area||"Almacén");b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
  el("area-questions").textContent=ITEMS.length+" criterios · "+STEPS.length+" elementos · "+DATA.length+" pilares";
+ el("view-maintenance-baseline").hidden=(current.area!=="Mantenimiento");
  el("header-counts").textContent=(current.area||"Almacén")+" · "+ITEMS.length+" criterios";
- const s=STEPS[step];el("step-pillar").textContent=s.pillar;el("step-title").textContent=s.name;
- el("step-count").textContent="Elemento "+(step+1)+" de "+STEPS.length+" · "+ITEMS.filter(x=>x.p===s.p&&x.e===s.e).length+" preguntas";
- const found=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);
+ const s=NAV_STEPS[step];el("step-pillar").textContent=s.pillar;el("step-title").textContent=s.name;
+ const found=stepCriteria(s);
+ el("step-count").textContent=(s.e===null?"Pilar ":"Elemento ")+(step+1)+" de "+NAV_STEPS.length+" · "+found.length+" preguntas";
  el("step-questions").innerHTML=found.map((item,i)=>{const ans=current.scores[item.id]||{},v=rating(ans.value);const more=ans.evidence||ans.notes||ans.action,parts=criterionParts(item.criterion);
- return '<article class="criterion"><div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(parts.question)+'</span></div>'+(parts.evidence?'<div class="criterion-proof"><i class="fa-regular fa-circle-check"></i> Para comprobarlo: '+escapeHTML(parts.evidence)+'</div>':'')+'<div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Agregar evidencia, observaciones o acciones</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Ej. conteo, correo, fecha, registro o enlace" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
- el("prev-step").disabled=step===0;el("next-step").innerHTML=step===STEPS.length-1?'Guardar y ver resultados <i class="fa-solid fa-chart-pie"></i>':'Siguiente <i class="fa-solid fa-arrow-right"></i>';
+ return '<article class="criterion">'+(s.e===null?'<div class="criterion-element">'+escapeHTML(item.element)+'</div>':'')+'<div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(parts.question)+'</span></div>'+(parts.evidence?'<div class="criterion-proof"><i class="fa-regular fa-circle-check"></i> Para comprobarlo: '+escapeHTML(parts.evidence)+'</div>':'')+'<div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Agregar evidencia, observaciones o acciones</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Ej. conteo, correo, fecha, registro o enlace" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
+ el("prev-step").disabled=step===0;el("next-step").innerHTML=step===NAV_STEPS.length-1?'Guardar y ver resultados <i class="fa-solid fa-chart-pie"></i>':'Siguiente <i class="fa-solid fa-arrow-right"></i>';
  renderStepNav();
 }
 function setChoice(button){
@@ -115,7 +146,7 @@ function switchArea(area){if(area===(current.area||"Almacén"))return;startNew(a
 function openEval(id){const obj=store.find(x=>x.id===id);if(!obj)return;current=clone(obj);step=0;localDraft();reflectFields();renderStep();status("Evaluación cargada para revisar o actualizar.");showPage("nueva")}
 function removeEval(id){if(!confirm("¿Eliminar esta evaluación del almacenamiento de este navegador? Los registros que ya llegaron a Sheets NO se eliminan."))return;store=store.filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(store));renderHistory();status("Evaluación eliminada solo de este navegador.")}
 function renderHistory(){
- const q=el("search-evals").value.toLowerCase().trim(),arr=store.filter(x=>!q||[x.period,x.date].join(" ").toLowerCase().includes(q));
+ const q=el("search-evals").value.toLowerCase().trim(),arr=store.filter(x=>!q||[x.period,x.date,x.area].join(" ").toLowerCase().includes(q));
  el("hist-count").textContent=store.length+" evaluaciones guardadas en este navegador";
  el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||("Evaluación "+dateLabel(x.date)))+'</strong><br><span class="subtle">'+escapeHTML(x.area||"Almacén")+'</span></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+totalAnswered(x)+' / '+itemsFor(x).length+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
  syncDashboardSelector();
@@ -294,9 +325,10 @@ el("step-nav").addEventListener("click",e=>{const b=e.target.closest("[data-step
 el("step-questions").addEventListener("click",e=>{const b=e.target.closest("[data-criterion]");if(b)setChoice(b)});
 el("step-questions").addEventListener("input",e=>{const node=e.target;if(node.dataset.note){current.scores[node.dataset.note]??={};current.scores[node.dataset.note][node.dataset.noteKey]=node.value;localDraft()}});
 el("prev-step").onclick=()=>{step=Math.max(0,step-1);renderStep()};
-el("next-step").onclick=()=>{if(step===STEPS.length-1){saveEvaluation(true)}else{step++;renderStep()}};
+el("next-step").onclick=()=>{if(step===NAV_STEPS.length-1){saveEvaluation(true)}else{step++;renderStep()}};
 el("save-eval").onclick=()=>saveEvaluation(false);el("new-eval").onclick=()=>startNew();el("new-from-list").onclick=()=>startNew();
 document.querySelectorAll("[data-area]").forEach(b=>b.addEventListener("click",()=>switchArea(b.dataset.area)));
+el("view-maintenance-baseline").onclick=()=>{const existing=store.find(x=>x.id===MAINTENANCE_BASELINE_ID);if(!existing){status("No se encontró la evaluación inicial precargada.",true);return}el("dashboard-select").value=existing.id;showPage("dashboard")};
 el("history-body").addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;if(t.dataset.edit)openEval(t.dataset.edit);if(t.dataset.view){el("dashboard-select").value=t.dataset.view;showPage("dashboard")}if(t.dataset.delete)removeEval(t.dataset.delete)});
 el("search-evals").oninput=renderHistory;el("dashboard-select").onchange=renderDashboard;
 el("chart-radar-png").onclick=()=>downloadWhiteCanvas(el("radarChart"),"oleolab_madurez_pilares.png");
@@ -307,4 +339,6 @@ el("import-json").onchange=e=>importJSON(e.target.files[0]);
 el("refresh-cloud").onclick=fetchCloud;
 el("save-gas-url").onclick=()=>{localStorage.setItem(URLKEY,el("gas-url").value.trim()||URL_DEFAULT);status("URL de GAS guardada.")};
 el("gas-url").value=localStorage.getItem(URLKEY)||URL_DEFAULT;
+const initialMaintenanceAdded=addMaintenanceBaseline();
 reflectFields();renderStep();renderHistory();showPage("nueva");
+if(initialMaintenanceAdded)status("Diagnóstico inicial de Mantenimiento precargado. Abre Historial o selecciona Mantenimiento para verlo.");
