@@ -8,15 +8,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=9">
+<link rel="stylesheet" href="styles.css?v=10">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script defer src="catalog.js?v=9"></script>
-<script defer src="catalog-operaciones.js?v=9"></script>
-<script defer src="catalog-mantenimiento.js?v=9"></script>
-<script defer src="app.js?v=9"></script>
-<script defer src="editor.js?v=9"></script>
+<script defer src="catalog.js?v=10"></script>
+<script defer src="catalog-operaciones.js?v=10"></script>
+<script defer src="catalog-mantenimiento.js?v=10"></script>
+<script defer src="app.js?v=10"></script>
+<script defer src="editor.js?v=10"></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
@@ -37,9 +37,10 @@
   <div class="area-switch" role="group" aria-label="Área a evaluar">
    <button type="button" data-area="Almacén" class="area-option selected" aria-pressed="true"><i class="fa-solid fa-boxes-stacked"></i><span>Almacén</span><small>Inventario y monitor críticos</small></button>
    <button type="button" data-area="Producción" class="area-option" aria-pressed="false"><i class="fa-solid fa-industry"></i><span>Producción</span><small>Gestión operativa</small></button>
-   <button type="button" data-area="Mantenimiento" class="area-option" aria-pressed="false"><i class="fa-solid fa-screwdriver-wrench"></i><span>Mantenimiento</span><small>Gestión operativa</small></button>
+   <button type="button" data-area="Mantenimiento" class="area-option" aria-pressed="false"><i class="fa-solid fa-screwdriver-wrench"></i><span>Mantenimiento</span><small>Activos, mantenimiento y costos</small></button>
   </div>
   <p id="area-questions" class="area-questions">29 criterios · 8 elementos · 4 pilares</p>
+  <button id="view-maintenance-baseline" class="btn maintenance-baseline-button" type="button" hidden><i class="fa-solid fa-chart-pie"></i> Ver diagnóstico inicial de Mantenimiento (29 respuestas)</button>
   <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="help" id="progress-label">0 de 29 criterios evaluados</p><p id="catalog-version-note" class="help version-note" hidden></p>
   <div class="wizard-layout">
    <aside class="step-nav" id="step-nav" aria-label="Elementos del assessment"></aside>
