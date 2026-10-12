@@ -197,11 +197,18 @@ const DEFAULT_CATALOG=[
   ]
 ];
 const CATALOG_KEY="oleolab_assessment_catalog_v1";
-function validCatalog(c){
- if(!Array.isArray(c)||c.length!==4)return false;
- if(c.some((p,i)=>!Array.isArray(p)||p[0]!==DEFAULT_CATALOG[i][0]||!Array.isArray(p[1])||p[1].length<1||p[1].length>12))return false;
+function areaCatalog(area){return area==="Producción"||area==="Mantenimiento"?OPERATIONS_DEFAULT_CATALOG:DEFAULT_CATALOG}
+function catalogStorageKey(area){return area==="Almacén"?CATALOG_KEY:CATALOG_KEY+"_"+(area==="Mantenimiento"?"mantenimiento":"produccion")}
+function validCatalog(c,area){
+ if(!Array.isArray(c)||!c.length)return false;
+ let expected;
+ if(area==="Producción"||area==="Mantenimiento")expected=OPERATIONS_DEFAULT_CATALOG;
+ else if(area==="Almacén")expected=DEFAULT_CATALOG;
+ else expected=c.length===4?DEFAULT_CATALOG:c.length===2?OPERATIONS_DEFAULT_CATALOG:null;
+ if(!expected||c.length!==expected.length)return false;
+ if(c.some((p,i)=>!Array.isArray(p)||p[0]!==expected[i][0]||!Array.isArray(p[1])||p[1].length<1||p[1].length>12))return false;
  return c.every(p=>p[1].every(e=>Array.isArray(e)&&typeof e[0]==="string"&&e[0].trim().length>0&&e[0].length<=120&&Array.isArray(e[1])&&e[1].length>=1&&e[1].length<=25&&e[1].every(q=>typeof q==="string"&&q.trim().length>=5&&q.length<=700)));
 }
-function normalizeCatalog(c){return validCatalog(c)?JSON.parse(JSON.stringify(c)):JSON.parse(JSON.stringify(DEFAULT_CATALOG))}
+function normalizeCatalog(c,area){return validCatalog(c,area)?JSON.parse(JSON.stringify(c)):JSON.parse(JSON.stringify(areaCatalog(area)))}
 function isPreviousDefault(c){const json=JSON.stringify(c);return json===JSON.stringify(PREVIOUS_DEFAULT_CATALOG)||json===JSON.stringify(DEFAULT_CATALOG_24)}
 function upgradeUntouchedDefault(c){return isPreviousDefault(c)?JSON.parse(JSON.stringify(DEFAULT_CATALOG)):c}
