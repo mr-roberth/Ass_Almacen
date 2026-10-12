@@ -130,12 +130,47 @@ function dashboardEvaluation(){return store.find(x=>x.id===el("dashboard-select"
 function summary(ev){const active=catalogFor(ev),steps=stepsFor(ev);const answered=totalAnswered(ev),overall=rowScore(ev,()=>true);return {answered,overall,pillars:active.map((d,p)=>rowScore(ev,x=>x.p===p)),elements:steps.map(s=>rowScore(ev,x=>x.p===s.p&&x.e===s.e))}}
 function makeCharts(ev){
  const d=summary(ev);
- if(typeof Chart==="undefined"){el("graph-alert").textContent="No se cargó Chart.js. Verifica la conexión a Internet.";return}
+ if(typeof Chart==="undefined"){el("graph-alert").textContent="No se cargaron las gráficas. Verifica tu conexión a Internet.";return}
  el("graph-alert").textContent="";
  if(radarChart)radarChart.destroy();if(barsChart)barsChart.destroy();
- const base={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>pct(ctx.raw)}}}};
- radarChart=new Chart(el("radarChart"),{type:"radar",data:{labels:DATA.map(x=>x[0]),datasets:[{label:"Madurez",data:d.pillars.map(x=>x??0),borderColor:"#197250",pointBackgroundColor:"#197250",backgroundColor:"rgba(32,139,88,.18)",borderWidth:2.5,pointRadius:4}]},options:{...base,layout:{padding:20},scales:{r:{min:0,max:100,ticks:{stepSize:25,backdropColor:"transparent",color:"#6c7c71"},angleLines:{color:"#d9e4dd"},grid:{color:"#d9e4dd"},pointLabels:{color:"#294a3c",font:{size:11,weight:"600"}}}}}});
- barsChart=new Chart(el("barsChart"),{type:"bar",data:{labels:STEPS.map(s=>s.name.length>25?s.name.slice(0,24)+"…":s.name),datasets:[{data:d.elements.map(x=>x??0),backgroundColor:STEPS.map((s,i)=>["#237755","#3b966f","#69ae81","#b4d9bf"][s.p]),borderRadius:5,maxBarThickness:18}]},options:{...base,indexAxis:"y",layout:{padding:4},scales:{x:{min:0,max:100,ticks:{callback:v=>v+"%"},grid:{color:"#e9efec"}},y:{grid:{display:false},ticks:{color:"#455f50",font:{size:10}}}}}});
+ const base={responsive:true,maintainAspectRatio:false,animation:false};
+ const pillarData=d.pillars.map(x=>x??0);
+ const pillarNames=DATA.map(x=>x[0]);
+ const useRadar=DATA.length>=3;
+ el("pillar-chart-type").textContent=useRadar?"Radar de madurez (%)":"Madurez por pilar (%)";
+ radarChart=new Chart(el("radarChart"),useRadar?{
+  type:"radar",data:{labels:pillarNames,datasets:[{label:"Madurez (%)",data:pillarData,borderColor:"#197250",pointBackgroundColor:"#197250",backgroundColor:"rgba(32,139,88,.18)",borderWidth:2.5,pointRadius:4}]},
+  options:{...base,layout:{padding:20},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>pct(ctx.raw)}}},scales:{r:{min:0,max:100,ticks:{stepSize:25,backdropColor:"transparent",color:"#6c7c71"},angleLines:{color:"#d9e4dd"},grid:{color:"#d9e4dd"},pointLabels:{color:"#294a3c",font:{size:11,weight:"600"}}}}}
+ }:{
+  type:"bar",data:{labels:pillarNames,datasets:[{label:"Madurez (%)",data:pillarData,backgroundColor:["#237755","#63ad87"],borderRadius:7,maxBarThickness:62}]},
+  options:{...base,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>pct(ctx.raw)}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+"%"},grid:{color:"#e9efec"}},y:{grid:{display:false}}}}
+ });
+ const groups=STEPS.map(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e));
+ const counts=v=>groups.map(g=>g.filter(x=>rating(ev.scores?.[x.id]?.value)===v).length);
+ const labelPlugin={id:"oleolabCountLabels",afterDatasetsDraw(chart){
+   const ctx=chart.ctx;ctx.save();ctx.font="700 11px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+   chart.data.datasets.forEach((set,di)=>chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+     const count=Number(set.data[i]||0),start=Number(bar.base),end=Number(bar.x);
+     if(!count||Math.abs(end-start)<23)return;
+     ctx.fillStyle="#ffffff";ctx.fillText(String(count),(start+end)/2,bar.y);
+   }));ctx.restore();
+ }};
+ const h=Math.max(360,STEPS.length*50+105);el("barsChart").parentElement.style.height=h+"px";
+ barsChart=new Chart(el("barsChart"),{
+  type:"bar",data:{labels:STEPS.map(s=>s.name),datasets:[
+    {label:"Cumple",data:counts(2),backgroundColor:"#278359",borderRadius:4},
+    {label:"Parcial",data:counts(1),backgroundColor:"#d0a039",borderRadius:3},
+    {label:"No cumple",data:counts(0),backgroundColor:"#c7625b",borderRadius:3}
+  ]},
+  options:{...base,indexAxis:"y",layout:{padding:{right:12}},plugins:{
+    legend:{display:true,position:"bottom",labels:{boxWidth:13,color:"#385846",font:{size:11}}},
+    tooltip:{callbacks:{label:ctx=>ctx.dataset.label+": "+ctx.raw+" criterios"}}
+   },
+   scales:{x:{min:0,stacked:true,ticks:{precision:0,stepSize:2},grid:{color:"#e9efec"},title:{display:true,text:"Número de criterios",color:"#456253"}},
+     y:{stacked:true,grid:{display:false},ticks:{font:{size:11},color:"#405b4b",autoSkip:false}}}
+  },
+  plugins:[labelPlugin]
+ });
 }
 function renderDashboard(){
  syncDashboardSelector();
