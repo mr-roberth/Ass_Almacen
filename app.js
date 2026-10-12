@@ -5,7 +5,10 @@ const LEGACY_DATA=[
 ["Sostenibilidad",[["Medición de desempeño",["Hay indicadores de cumplimiento Forecast","Se mide cumplimiento por periodo","Se monitorean las desviaciones relevantes","Los resultados se revisan periódicamente"]],["Análisis de desviaciones",["Los incumplimientos tienen análisis de causa","Se distinguen causas humanas, operativas y tecnológicas","Se identifican desviaciones recurrentes","Se documentan los hallazgos"]],["Acciones correctivas",["Las desviaciones generan acciones concretas","Acciones tienen responsable y fecha","Se comprueba efectividad de las acciones","Se evita repetir problemas sin tratamiento"]],["Continuidad operativa",["La práctica no depende de una sola persona","Existen suplentes capacitados","El proceso cuenta con documentación mínima","Se mantiene ante cambios de personal o carga"]]]]
 ];
 
-let catalogTemplate=normalizeCatalog(upgradeUntouchedDefault(getSaved(CATALOG_KEY,DEFAULT_CATALOG)));
+let catalogTemplate=normalizeCatalog(upgradeUntouchedDefault(getSaved(CATALOG_KEY,DEFAULT_CATALOG)),"Almacén");
+const catalogByArea={"Almacén":catalogTemplate};
+function templateFor(area){const key=["Almacén","Producción","Mantenimiento"].includes(area)?area:"Almacén";if(!catalogByArea[key])catalogByArea[key]=normalizeCatalog(getSaved(catalogStorageKey(key),areaCatalog(key)),key);return catalogByArea[key]}
+let editorArea="Almacén";
 let editingCatalog=JSON.parse(JSON.stringify(catalogTemplate));
 let DATA=JSON.parse(JSON.stringify(catalogTemplate)),ITEMS=[],STEPS=[];
 function catalogFor(ev){return ev&&validCatalog(ev.catalog)?ev.catalog:LEGACY_DATA}
@@ -31,10 +34,12 @@ else if(isPreviousDefault(current.catalog)&&!Object.values(current.scores).some(
  current.catalog=clone(catalogTemplate);localStorage.setItem(DRAFTKEY,JSON.stringify(current));
 }
 activateCatalog(current);
-function blank(){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area:"Almacén",owner:"",forecast:"",representative:"",scores:{},catalog:clone(catalogTemplate),created:n.toISOString()}}
+function blank(area="Almacén"){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+area+" · "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area,owner:"",forecast:"",representative:"",scores:{},catalog:clone(templateFor(area)),created:n.toISOString()}}
 function rating(x){return [0,1,2].includes(Number(x))&&x!==undefined&&x!==null?Number(x):null}
 function pct(n){return n==null?"—":Math.round(n)+"%"}
-function level(n){return n==null?"Sin evaluar":n<=25?"Inicial":n<=50?"Básico":n<=75?"Estandarizado":n<=90?"Controlado":"Sostenible"}
+function levelIndex(n){return n==null?null:n<=25?1:n<=50?2:n<=75?3:n<=90?4:5}
+function levelName(n){return ["Inicial","Básico","Estandarizado","Controlado","Sostenible"][(levelIndex(n)||1)-1]}
+function level(n){return n==null?"Sin evaluar":("Nivel "+levelIndex(n)+" de 5 · "+levelName(n))}
 function rowScore(ev,predicate){let vs=itemsFor(ev).filter(predicate).map(i=>rating(ev.scores?.[i.id]?.value)).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length*50:null}
 function totalAnswered(ev){return itemsFor(ev).filter(i=>rating(ev.scores?.[i.id]?.value)!==null).length}
 function labelScore(v){return v===2?"Cumple":v===1?"Parcial":v===0?"No cumple":"Sin evaluar"}
@@ -45,7 +50,7 @@ function localDraft(){try{localStorage.setItem(DRAFTKEY,JSON.stringify(current))
 function status(msg,bad=false){el("status").textContent=msg;el("status").classList.toggle("error",bad)}
 function currentFields(){localDraft()}
 function reflectFields(){}
-function showPage(which){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+which));if(which==="nueva")renderStep();if(which==="evaluaciones")renderHistory();if(which==="dashboard")renderDashboard();if(which==="criterios")renderEditor()}
+function showPage(which){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+which));if(which==="nueva")renderStep();if(which==="evaluaciones")renderHistory();if(which==="dashboard")renderDashboard();if(which==="criterios"){el("catalog-area").value=editorArea;renderEditor()}}
 function renderStepNav(){
  const html=STEPS.map((s,i)=>{const filtered=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);const count=filtered.filter(x=>rating(current.scores[x.id]?.value)!==null).length;
  return '<button class="step-btn '+(i===step?"active ":"")+(count===filtered.length?"complete":"")+'" data-step="'+i+'" title="'+escapeHTML(s.pillar+" · "+s.name)+'"><span class="num">'+(i+1)+'</span><span>'+escapeHTML(s.name)+'<br><small class="subtle">'+count+'/'+filtered.length+' evaluados</small></span></button>'}).join("");
@@ -59,8 +64,11 @@ function renderStepNav(){
 }
 function renderStep(){
  activateCatalog(current);
+ document.querySelectorAll("[data-area]").forEach(b=>{const selected=b.dataset.area===(current.area||"Almacén");b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
+ el("area-questions").textContent=ITEMS.length+" criterios · "+STEPS.length+" elementos · "+DATA.length+" pilares";
+ el("header-counts").textContent=(current.area||"Almacén")+" · "+ITEMS.length+" criterios";
  const s=STEPS[step];el("step-pillar").textContent=s.pillar;el("step-title").textContent=s.name;
- el("step-count").textContent="Elemento "+(step+1)+" de "+STEPS.length;
+ el("step-count").textContent="Elemento "+(step+1)+" de "+STEPS.length+" · "+ITEMS.filter(x=>x.p===s.p&&x.e===s.e).length+" preguntas";
  const found=ITEMS.filter(x=>x.p===s.p&&x.e===s.e);
  el("step-questions").innerHTML=found.map((item,i)=>{const ans=current.scores[item.id]||{},v=rating(ans.value);const more=ans.evidence||ans.notes||ans.action,parts=criterionParts(item.criterion);
  return '<article class="criterion"><div class="criterion-title"><b>'+String(i+1).padStart(2,"0")+'</b><span>'+escapeHTML(parts.question)+'</span></div>'+(parts.evidence?'<div class="criterion-proof"><i class="fa-regular fa-circle-check"></i> Para comprobarlo: '+escapeHTML(parts.evidence)+'</div>':'')+'<div class="choice-row">'+[[2,"Cumple","yes"],[1,"Parcial","partial"],[0,"No cumple","no"]].map(([score,label,cls])=>'<button type="button" class="choice '+cls+(v===score?" on":"")+'" data-criterion="'+item.id+'" data-value="'+score+'" aria-pressed="'+(v===score?'true':'false')+'">'+label+'</button>').join("")+'</div><details class="more" '+(more?"open":"")+'><summary>Agregar evidencia, observaciones o acciones</summary><div class="field"><label for="evidence-'+item.id+'">Evidencia</label><input id="evidence-'+item.id+'" data-note="'+item.id+'" data-note-key="evidence" placeholder="Ej. conteo, correo, fecha, registro o enlace" value="'+escapeHTML(ans.evidence||"")+'"></div><div class="field"><label for="notes-'+item.id+'">Observaciones</label><textarea id="notes-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="notes" placeholder="Hallazgo o causa">'+escapeHTML(ans.notes||"")+'</textarea></div><div class="field"><label for="action-'+item.id+'">Acción</label><textarea id="action-'+item.id+'" rows="2" data-note="'+item.id+'" data-note-key="action" placeholder="Actividad de mejora">'+escapeHTML(ans.action||"")+'</textarea></div></details></article>'}).join("");
@@ -102,18 +110,19 @@ async function saveEvaluation(showResults=false){
  try{const result=await gasSave(saved);status(result)}
  catch(e){status("Respaldo local conservado. No se confirmó la sincronización: "+e.message,true)}
 }
-function startNew(){if(!confirm("¿Iniciar una nueva evaluación? Guarda la actual antes de continuar."))return;current=blank();step=0;reflectFields();renderStep();status("Nueva evaluación lista.");showPage("nueva")}
+function startNew(area=current.area||"Almacén"){if(!["Almacén","Producción","Mantenimiento"].includes(area))area=current.area||"Almacén";const hasAnswers=totalAnswered(current)>0;if(hasAnswers&&!confirm("¿Iniciar una nueva evaluación de "+area+"? El avance actual se guardará en el historial de este navegador."))return;if(hasAnswers)try{saveLocal()}catch(e){status("No fue posible guardar la evaluación actual.",true);return}current=blank(area);step=0;reflectFields();renderStep();localDraft();status("Nueva evaluación de "+area+". Empieza por las preguntas del primer elemento.");showPage("nueva")}
+function switchArea(area){if(area===(current.area||"Almacén"))return;startNew(area)}
 function openEval(id){const obj=store.find(x=>x.id===id);if(!obj)return;current=clone(obj);step=0;localDraft();reflectFields();renderStep();status("Evaluación cargada para revisar o actualizar.");showPage("nueva")}
 function removeEval(id){if(!confirm("¿Eliminar esta evaluación del almacenamiento de este navegador? Los registros que ya llegaron a Sheets NO se eliminan."))return;store=store.filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(store));renderHistory();status("Evaluación eliminada solo de este navegador.")}
 function renderHistory(){
  const q=el("search-evals").value.toLowerCase().trim(),arr=store.filter(x=>!q||[x.period,x.date].join(" ").toLowerCase().includes(q));
  el("hist-count").textContent=store.length+" evaluaciones guardadas en este navegador";
- el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||("Evaluación "+dateLabel(x.date)))+'</strong></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+totalAnswered(x)+' / '+itemsFor(x).length+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
+ el("history-body").innerHTML=arr.length?arr.map(x=>{let k=rowScore(x,()=>true);return '<tr><td><strong>'+escapeHTML(x.period||("Evaluación "+dateLabel(x.date)))+'</strong><br><span class="subtle">'+escapeHTML(x.area||"Almacén")+'</span></td><td>'+escapeHTML(dateLabel(x.date))+'</td><td>'+totalAnswered(x)+' / '+itemsFor(x).length+'</td><td><strong>'+pct(k)+'</strong><br><span class="subtle">'+escapeHTML(level(k))+'</span></td><td><div class="actions"><button class="btn" data-edit="'+escapeHTML(x.id)+'">Abrir</button><button class="btn" data-view="'+escapeHTML(x.id)+'">Resultados</button><button class="btn" data-delete="'+escapeHTML(x.id)+'" title="Eliminar local">×</button></div></td></tr>'}).join(""):'<tr><td colspan="5" class="subtle">No hay evaluaciones registradas.</td></tr>';
  syncDashboardSelector();
 }
 function syncDashboardSelector(){
  const sel=el("dashboard-select"),old=sel.value;
- sel.innerHTML=store.map(x=>'<option value="'+escapeHTML(x.id)+'">'+escapeHTML((x.period||"Sin periodo")+" · "+(x.area||"")+" · "+(x.date||""))+'</option>').join("");
+ sel.innerHTML=store.map(x=>'<option value="'+escapeHTML(x.id)+'">'+escapeHTML((x.area||"Almacén")+" · "+(x.period||"Sin periodo"))+'</option>').join("");
  if(store.some(x=>x.id===old))sel.value=old;
  if(!sel.value&&store.length)sel.value=store[0].id;
 }
@@ -133,13 +142,14 @@ function renderDashboard(){
  const ev=dashboardEvaluation();activateCatalog(ev);const d=summary(ev);
  el("kpi-global").textContent=pct(d.overall);
  el("kpi-level").textContent=level(d.overall);
+ el("kpi-index").textContent=levelIndex(d.overall)==null?"—":levelIndex(d.overall)+" / 5";
  el("kpi-answered").textContent=d.answered+"/"+ITEMS.length;
  el("kpi-elements").textContent=STEPS.filter(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e).every(x=>rating(ev.scores?.[x.id]?.value)!==null)).length+" / "+STEPS.length;
  el("kpi-met").textContent=ITEMS.filter(x=>rating(ev.scores?.[x.id]?.value)===2).length;
  const assessed=itemsFor(ev).filter(x=>rating(ev.scores?.[x.id]?.value)!==null);
  const evidenceCount=assessed.filter(x=>String(ev.scores?.[x.id]?.evidence||"").trim().length>0).length;
  el("kpi-evidence").textContent=evidenceCount+" de "+assessed.length+" respuestas con evidencia";
- el("dashboard-subtitle").textContent=(ev.period||"Evaluación") + " · " + (ev.date||"") + (d.answered<ITEMS.length?" · Resultado parcial: "+d.answered+"/"+ITEMS.length+" criterios":"");
+ el("dashboard-subtitle").textContent=(ev.area||"Almacén")+" · "+(ev.period||"Evaluación")+" · "+(ev.date||"")+(d.answered<ITEMS.length?" · Parcial: "+d.answered+"/"+ITEMS.length+" respondidas":"");
  makeCharts(ev);
  renderDetails(ev);
 }
@@ -152,8 +162,8 @@ function downloadContent(filename,type,data){
 }
 function exportCSV(){
  const all=store.some(x=>x.id===current.id)?store:store.concat(current);
- const rows=[["ID","Evaluación","Fecha","Pilar","Elemento","Criterio","Resultado","Puntaje","Evidencia","Observaciones","Acción"]];
- all.forEach(ev=>itemsFor(ev).forEach(x=>{const o=ev.scores?.[x.id]||{},v=rating(o.value);rows.push([ev.id,ev.period,ev.date,x.pillar,x.element,x.criterion,labelScore(v),v??"",o.evidence||"",o.notes||"",o.action||""])}));
+ const rows=[["ID","Área","Evaluación","Fecha","Pilar","Elemento","Criterio","Resultado","Puntaje","Evidencia","Observaciones","Acción"]];
+ all.forEach(ev=>itemsFor(ev).forEach(x=>{const o=ev.scores?.[x.id]||{},v=rating(o.value);rows.push([ev.id,ev.area||"Almacén",ev.period,ev.date,x.pillar,x.element,x.criterion,labelScore(v),v??"",o.evidence||"",o.notes||"",o.action||""])}));
  const content=rows.map(r=>r.map(c=>'"'+String(c??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
  downloadContent("oleolab_assessment_datos.csv","text/csv;charset=utf-8","\uFEFF"+content);
 }
@@ -178,13 +188,13 @@ async function generatePDF(){
  if(logo){pdf.setFillColor(255,255,255);pdf.roundedRect(14,6,47,22,2,2,"F");pdf.addImage(logo,"PNG",17,10,41,14)}
  pdf.setTextColor(255,255,255);pdf.setFontSize(17);pdf.setFont("helvetica","bold");
  pdf.text("ASSESSMENT DE MADUREZ",logo?68:14,17);
- pdf.setFontSize(9);pdf.setFont("helvetica","normal");pdf.text("Evaluación de madurez de Almacén · Oleolab",logo?68:14,25);
+ pdf.setFontSize(9);pdf.setFont("helvetica","normal");pdf.text("Área: "+(ev.area||"Almacén")+" · Oleolab",logo?68:14,25);
  pdf.setTextColor(30,58,42);pdf.setFontSize(12);pdf.setFont("helvetica","bold");pdf.text(String(ev.period||"Evaluación").slice(0,80),margin,48);
  pdf.setFontSize(9);pdf.setFont("helvetica","normal");
  pdf.text("Fecha de evaluación: "+String(dateLabel(ev.date)||"—"),margin,54);
  pdf.text("Cuestionario: "+DATA.length+" pilares · "+STEPS.length+" elementos · "+ITEMS.length+" criterios",margin,60);
  
- const labels=[["MADUREZ GLOBAL",pct(d.overall)],["NIVEL",level(d.overall)],["CRITERIOS EVALUADOS",d.answered+"/"+ITEMS.length],["ELEMENTOS COMPLETOS",STEPS.filter(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e).every(x=>rating(ev.scores?.[x.id]?.value)!==null)).length+"/"+STEPS.length]];
+ const labels=[["MADUREZ GLOBAL",pct(d.overall)],["NIVEL / 5",levelIndex(d.overall)==null?"—":levelIndex(d.overall)+"/5"],["CRITERIOS EVALUADOS",d.answered+"/"+ITEMS.length],["ELEMENTOS COMPLETOS",STEPS.filter(s=>ITEMS.filter(x=>x.p===s.p&&x.e===s.e).every(x=>rating(ev.scores?.[x.id]?.value)!==null)).length+"/"+STEPS.length]];
  const cardW=43.5;
  labels.forEach(([l,v],i)=>{const x=margin+i*46;pdf.setFillColor(239,246,241);pdf.roundedRect(x,75,cardW,24,2,2,"F");pdf.setTextColor(77,102,86);pdf.setFontSize(7);pdf.text(l,x+3,82);pdf.setTextColor(20,84,57);pdf.setFontSize(13);pdf.setFont("helvetica","bold");pdf.text(String(v),x+3,92);pdf.setFont("helvetica","normal")});
  pdf.setTextColor(25,76,53);pdf.setFont("helvetica","bold");pdf.setFontSize(10);
@@ -193,7 +203,7 @@ async function generatePDF(){
  if(barsChart){pdf.addImage(imageData(el("barsChart")),"PNG",110,117,89,113)}
  pdf.setTextColor(89,112,95);pdf.setFontSize(9);pdf.setFont("helvetica","normal");
  pdf.text("Escala: No cumple = 0 · Parcial = 1 · Cumple = 2. Sin evaluar se excluye del promedio.",margin,244);
- pdf.text("Resultados basados en los criterios respondidos para esta evaluación.",margin,250);
+ pdf.text("Madurez: "+level(d.overall)+" · Resultado basado solo en respuestas registradas.",margin,250);
  pdf.text("Informe generado: "+new Date().toLocaleString("es-MX"),margin,258);
  const hasAutoTable=typeof pdf.autoTable==="function";
  for(let p=0;p<DATA.length;p++){
@@ -240,7 +250,8 @@ el("step-questions").addEventListener("click",e=>{const b=e.target.closest("[dat
 el("step-questions").addEventListener("input",e=>{const node=e.target;if(node.dataset.note){current.scores[node.dataset.note]??={};current.scores[node.dataset.note][node.dataset.noteKey]=node.value;localDraft()}});
 el("prev-step").onclick=()=>{step=Math.max(0,step-1);renderStep()};
 el("next-step").onclick=()=>{if(step===STEPS.length-1){saveEvaluation(true)}else{step++;renderStep()}};
-el("save-eval").onclick=()=>saveEvaluation(false);el("new-eval").onclick=startNew;el("new-from-list").onclick=startNew;
+el("save-eval").onclick=()=>saveEvaluation(false);el("new-eval").onclick=()=>startNew();el("new-from-list").onclick=()=>startNew();
+document.querySelectorAll("[data-area]").forEach(b=>b.addEventListener("click",()=>switchArea(b.dataset.area)));
 el("history-body").addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;if(t.dataset.edit)openEval(t.dataset.edit);if(t.dataset.view){el("dashboard-select").value=t.dataset.view;showPage("dashboard")}if(t.dataset.delete)removeEval(t.dataset.delete)});
 el("search-evals").oninput=renderHistory;el("dashboard-select").onchange=renderDashboard;
 el("chart-radar-png").onclick=()=>downloadWhiteCanvas(el("radarChart"),"oleolab_madurez_pilares.png");
