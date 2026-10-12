@@ -41,6 +41,13 @@ else if(!validCatalog(current.catalog)&&!Object.values(current.scores).some(x=>x
 else if(isPreviousDefault(current.catalog)&&!Object.values(current.scores).some(x=>x&&(x.value!==undefined||x.notes||x.action||x.evidence))){
  current.catalog=clone(catalogTemplate);localStorage.setItem(DRAFTKEY,JSON.stringify(current));
 }
+// Un borrador sin respuestas de la antigua plantilla de 80 preguntas de Mantenimiento
+// se actualiza automáticamente, sin reescribir evaluaciones históricas.
+else if(current.area==="Mantenimiento"&&JSON.stringify(current.catalog)===JSON.stringify(OPERATIONS_DEFAULT_CATALOG)
+ &&!Object.values(current.scores).some(x=>x&&(x.value!==undefined||x.notes||x.action||x.evidence))){
+ current.catalog=clone(MAINTENANCE_DEFAULT_CATALOG);
+ localStorage.setItem(DRAFTKEY,JSON.stringify(current));
+}
 activateCatalog(current);
 function blank(area="Almacén"){const n=new Date();return {id:"ev"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),period:"Evaluación "+area+" · "+n.toLocaleString("es-MX",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}),date:new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10),area,owner:"",forecast:"",representative:"",scores:{},catalog:clone(templateFor(area)),created:n.toISOString()}}
 const MAINTENANCE_BASELINE_ID="mant_diagnostico_20261012";
