@@ -4,22 +4,23 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assessment de Madurez | Oleolab</title>
 <meta name="theme-color" content="#174f3c">
-<meta name="description" content="Evalúa la confiabilidad de inventarios, Forecast, Compras y el monitor de insumos críticos con 29 criterios de Oleolab.">
+<meta name="description" content="Assessment de madurez Oleolab para Almacén, Producción y Mantenimiento, con resultados y nivel de 1 a 5.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script defer src="catalog.js?v=7"></script>
-<script defer src="app.js?v=7"></script>
-<script defer src="editor.js?v=7"></script>
+<script defer src="catalog.js?v=8"></script>
+<script defer src="catalog-operaciones.js?v=8"></script>
+<script defer src="app.js?v=8"></script>
+<script defer src="editor.js?v=8"></script>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
-  <div class="identity"><div class="logo-plate"><img src="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png" alt="Logotipo Oleolab" onerror="this.style.display='none'"></div><div><h1>Assessment Oleolab</h1><p>Monitor de insumos críticos · Almacén, Planeación y Compras</p></div></div>
-  <span class="header-note">4 pilares · 8 elementos · 29 criterios</span>
+  <div class="identity"><div class="logo-plate"><img src="https://raw.githubusercontent.com/mr-roberth/Pruebas/main/assets/oleolab-logo.png" alt="Logotipo Oleolab" onerror="this.style.display='none'"></div><div><h1>Assessment Oleolab</h1><p>Evaluación de la gestión operativa · Almacén, Producción y Mantenimiento</p></div></div>
+  <span class="header-note" id="header-counts">Almacén · 29 criterios</span>
 </div></header>
 <main class="shell">
 <nav class="tabs" aria-label="Secciones">
@@ -31,7 +32,13 @@
 <div id="status" class="notice" role="status" aria-live="polite">Selecciona una respuesta por pregunta. Los cambios se guardan en este dispositivo mientras avanzas.</div>
 <section id="page-nueva" class="view active">
  <div class="panel">
-  <div class="panel-head" style="margin-bottom:0"><div><h2>¿Qué tan preparada está nuestra operación?</h2><p class="subtle">Inventarios, Forecast, fechas de entrega y coordinación con Compras. Responde con lo que ocurre en la práctica.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip"><span id="progress-global">—</span> &nbsp; madurez parcial</span></div></div>
+  <div class="panel-head" style="margin-bottom:10px"><div><h2>Assessment de madurez</h2><p class="subtle">Selecciona el área y evalúa cada criterio de forma sencilla, con evidencia real.</p></div><div class="actions"><button class="btn" id="new-eval"><i class="fa-solid fa-plus"></i> Nueva evaluación</button><span class="chip">Nivel <span id="progress-global">—</span> de madurez</span></div></div>
+  <div class="area-switch" role="group" aria-label="Área a evaluar">
+   <button type="button" data-area="Almacén" class="area-option selected" aria-pressed="true"><i class="fa-solid fa-boxes-stacked"></i><span>Almacén</span><small>Inventario y monitor críticos</small></button>
+   <button type="button" data-area="Producción" class="area-option" aria-pressed="false"><i class="fa-solid fa-industry"></i><span>Producción</span><small>Gestión operativa</small></button>
+   <button type="button" data-area="Mantenimiento" class="area-option" aria-pressed="false"><i class="fa-solid fa-screwdriver-wrench"></i><span>Mantenimiento</span><small>Gestión operativa</small></button>
+  </div>
+  <p id="area-questions" class="area-questions">29 criterios · 8 elementos · 4 pilares</p>
   <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div><p class="help" id="progress-label">0 de 29 criterios evaluados</p><p id="catalog-version-note" class="help version-note" hidden></p>
   <div class="wizard-layout">
    <aside class="step-nav" id="step-nav" aria-label="Elementos del assessment"></aside>
@@ -63,26 +70,26 @@
   <label class="field" style="max-width:420px">Seleccionar evaluación<select id="dashboard-select"></select></label>
  </div>
  <div class="kpi-grid">
-  <div class="kpi"><small>Madurez global</small><strong id="kpi-global">—</strong><small id="kpi-level">Sin evaluar</small></div>
+  <div class="kpi"><small>Nivel de madurez</small><strong id="kpi-index">—</strong><small id="kpi-level">Sin evaluar</small></div>
   <div class="kpi"><small>Criterios evaluados</small><strong id="kpi-answered">0 / 29</strong><small>Según el cuestionario de la evaluación</small></div>
-  <div class="kpi"><small>Criterios que cumplen</small><strong id="kpi-met">0</strong><small id="kpi-evidence">Evidencias registradas: 0</small></div>
-  <div class="kpi"><small>Elementos evaluados</small><strong id="kpi-elements">0 / 8</strong><small>Elementos completos de la evaluación</small></div>
+  <div class="kpi"><small>Madurez obtenida</small><strong id="kpi-global">—</strong><small>Porcentaje sobre criterios respondidos</small></div>
+  <div class="kpi"><small>Elementos completos</small><strong id="kpi-elements">0 / 8</strong><small id="kpi-evidence">Evidencias registradas: 0</small><span id="kpi-met" hidden>0</span></div>
  </div>
  <div class="chart-grid">
-  <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-bullseye"></i> Madurez de los pilares</h3><p class="subtle">Gráfico radar · porcentaje de madurez</p></div><button class="btn" id="chart-radar-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="radarChart" aria-label="Radar de pilares" role="img"></canvas></div></div>
-  <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-chart-bar"></i> Cumplimiento por elemento</h3><p class="subtle">Elementos evaluados · barras horizontales</p></div><button class="btn" id="chart-bars-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="barsChart" aria-label="Barras de cumplimiento" role="img"></canvas></div></div>
+  <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-bullseye"></i> Madurez de los pilares</h3><p class="subtle" id="pillar-chart-type">Madurez por pilar (%)</p></div><button class="btn" id="chart-radar-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="radarChart" aria-label="Radar de pilares" role="img"></canvas></div></div>
+  <div class="chart-panel"><div class="chart-header"><div><h3><i class="fa-solid fa-chart-bar"></i> Criterios por elemento</h3><p class="subtle">Cuántos cumplen, cumplen parcialmente y no cumplen</p></div><button class="btn" id="chart-bars-png"><i class="fa-solid fa-image"></i> PNG</button></div><div class="chart-canvas"><canvas id="barsChart" aria-label="Barras de cumplimiento" role="img"></canvas></div></div>
  </div>
  <p id="graph-alert" class="help"></p>
  <div class="panel"><div class="panel-head"><div><h2>Detalle analítico de criterios</h2><p class="subtle">Criterios agrupados por pilar y elemento, con resultado y evidencias.</p></div></div><div id="detail-criteria"></div></div>
 </section>
 <section id="page-criterios" class="view">
  <div class="panel">
-  <div class="panel-head"><div><h2>Preguntas de evaluación</h2><p class="subtle">Ajusta las preguntas a la rutina real del monitor de insumos críticos que recibe Compras. Los cuatro pilares permanecen para comparar las evaluaciones.</p></div><span class="chip" id="catalog-count">29 criterios · 8 elementos</span></div>
+  <div class="panel-head"><div><h2>Preguntas de evaluación</h2><p class="subtle">Ajusta las preguntas a la rutina real del monitor de insumos críticos que recibe Compras. Los pilares del área permanecen para comparar las evaluaciones.</p></div><label class="field editor-area-select">Área a editar<select id="catalog-area"><option value="Almacén">Almacén</option><option value="Producción">Producción</option><option value="Mantenimiento">Mantenimiento</option></select></label><span class="chip" id="catalog-count">29 criterios · 8 elementos</span></div>
   <div class="notice"><strong>Edición sencilla:</strong> abre un pilar, escribe la pregunta y cómo comprobarla. Puedes agregar o eliminar preguntas y elementos. Las respuestas anteriores no cambian.</div>
   <div class="catalog-toolbar">
     <button id="catalog-save" class="btn primary" disabled><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
     <button id="catalog-cancel" class="btn"><i class="fa-solid fa-rotate-left"></i> Descartar cambios</button>
-    <button id="catalog-reset" class="btn"><i class="fa-solid fa-arrow-rotate-left"></i> Usar 29 oficiales</button>
+    <button id="catalog-reset" class="btn"><i class="fa-solid fa-arrow-rotate-left"></i> Restablecer oficiales</button>
     <button id="catalog-export" class="btn"><i class="fa-solid fa-download"></i> Exportar</button>
     <label for="catalog-import" class="btn"><i class="fa-solid fa-upload"></i> Importar</label>
     <input type="file" id="catalog-import" accept=".json" style="display:none">
